@@ -63,9 +63,74 @@ export interface TenantBranding {
   active_theme: "luxury" | "modern" | "classic" | "adventure" | "urban" | "minimal";
 }
 
+export interface DashboardOverview {
+  fleet_total: number;
+  fleet_available: number;
+  fleet_rented: number;
+  fleet_in_maintenance: number;
+  fleet_utilization_rate: number;
+  bookings_active: number;
+  bookings_pending: number;
+  bookings_completed_this_month: number;
+  revenue_this_month: string;
+  pending_revenue: string;
+  maintenance_active_jobs: number;
+  maintenance_overdue_services: number;
+}
+
+export interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  driver_license_number: string;
+  license_expiry_date: string;
+  date_of_birth: string;
+  country: string;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface ExtraAddon {
+  id: string;
+  name: string;
+  description?: string;
+  price: string;
+  pricing_type: "per_day" | "per_rental";
+  is_active: boolean;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discount_type: "percentage" | "fixed_amount";
+  discount_value: string;
+  min_rental_days: number;
+  is_active: boolean;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number?: string | null;
+  is_platform_admin: boolean;
+  is_active: boolean;
+}
+
+export interface AuthSession {
+  user: AuthUser;
+  role: "owner" | "admin" | "manager" | "staff" | "accountant" | "viewer";
+  access_token: string;
+  refresh_token: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
+  message?: string;
   meta?: {
     timestamp: string;
   };

@@ -66,7 +66,7 @@ export const THEME_REGISTRY: Record<string, ThemeMeta> = {
   },
 };
 
-const THEME_DEFINITIONS: Record<string, ThemeDefinition> = {
+export const THEME_DEFINITIONS: Record<string, ThemeDefinition> = {
   luxury: luxuryTheme,
   modern: modernTheme,
   classic: classicTheme,

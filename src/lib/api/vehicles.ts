@@ -38,3 +38,6 @@ export async function fetchVehicle(id: string, tenantHost?: string): Promise<Veh
     cache: "no-store",
   });
 }
+
+export { fetchVehicles as getVehicles, fetchVehicle as getVehicle };
+

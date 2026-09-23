@@ -48,12 +48,33 @@ export async function lookupBooking(
   });
 }
 
+export async function fetchBookings(
+  params?: { status?: string },
+  token?: string,
+  tenantHost?: string
+): Promise<Booking[]> {
+  const query = params?.status ? `?status=${encodeURIComponent(params.status)}` : "";
+  return apiFetch<Booking[]>(`/api/v1/bookings/${query}`, {
+    method: "GET",
+    token,
+    tenantHost,
+    cache: "no-store",
+  });
+}
+
 export async function cancelBooking(
   bookingId: string,
+  reason?: string,
+  token?: string,
   tenantHost?: string
 ): Promise<Booking> {
   return apiFetch<Booking>(`/api/v1/bookings/${bookingId}/cancel/`, {
     method: "POST",
+    token,
     tenantHost,
+    body: JSON.stringify({ reason: reason || "Cancelled via dashboard" }),
   });
 }
+
+export { fetchBookings as getBookings };
+
