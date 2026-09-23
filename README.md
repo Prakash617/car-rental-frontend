@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Car Rental SaaS — Frontend Application
+
+Production-grade Next.js 15 App Router frontend for the multi-tenant Car Rental SaaS platform.
+
+---
+
+## Architectural Highlights
+
+- **Next.js 15 App Router**: Server Components by default for superior SEO, instantaneous TTFB, and zero client bundle overhead for static views.
+- **Dynamic Multi-Theme Engine**: Pure code layouts decoupled from database models. Supports Luxury, Modern, Classic, Adventure, Urban, and Minimal experiences with non-destructive live previewing.
+- **Centralized Typed API Client**: All data communication passes through `lib/api/client.ts`, preserving Host headers for backend tenant resolution.
+- **Tailwind CSS + shadcn/ui**: Accessible, customizable design tokens bound to dynamic CSS variables.
+- **Motion & Accessibility**: WCAG 2.1 AA keyboard operability, ARIA attributes, and reduced-motion compliance.
+
+---
+
+## Directory Layout
+
+```text
+frontend/
+├── src/
+│   ├── app/                 # Next.js App Router (Public portals & Dashboard)
+│   ├── components/          # UI primitives, layout, and domain components
+│   ├── themes/              # Modular theme implementations (Luxury, Modern, etc.)
+│   ├── lib/                 # API client, auth, tenant resolution, theme registry
+│   ├── hooks/               # Custom React hooks
+│   ├── types/               # TypeScript domain interfaces
+│   └── config/              # Site and design configuration
+├── public/                  # Static assets and icons
+├── tests/                   # Component and unit tests
+├── e2e/                     # Playwright end-to-end tests
+├── Dockerfile               # Multi-stage standalone container
+└── package.json
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. **Configure environment variables**:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Start local development server**:
+   ```bash
+   npm run dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Run build check**:
+   ```bash
+   npm run build
+   ```
