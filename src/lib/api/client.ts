@@ -5,7 +5,7 @@ export class ApiError extends Error {
   statusCode: number;
   details?: unknown;
 
-  constructor(code: string, message: string, statusCode: number, details?: unknown) {
+  constructor(message: string, code: string = "API_ERROR", statusCode: number = 500, details?: unknown) {
     super(message);
     this.name = "ApiError";
     this.code = code;
@@ -14,60 +14,62 @@ export class ApiError extends Error {
   }
 }
 
-interface FetchOptions extends RequestInit {
-  params?: Record<string, string | number | boolean | undefined>;
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export interface RequestOptions extends RequestInit {
   tenantHost?: string;
-  authToken?: string;
+  token?: string;
 }
 
 /**
- * Centralized API client for communicating with the Django backend.
- * Automatically injects headers, params, and resolves the standardized envelope.
+ * Enterprise API client that attaches tenant hostname routing headers
+ * and unwraps standardized response envelopes.
  */
-export async function apiClient<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-  const url = new URL(`/api/v1${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, baseUrl);
+export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  const { tenantHost, token, headers: customHeaders, ...restOptions } = options;
 
-  if (options.params) {
-    Object.entries(options.params).forEach(([key, val]) => {
-      if (val !== undefined && val !== null) {
-        url.searchParams.append(key, String(val));
-      }
-    });
-  }
+  const resolvedHost =
+    tenantHost ||
+    (typeof window !== "undefined" ? window.location.host : "localhost:3000");
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
+    Host: resolvedHost,
+    "X-Forwarded-Host": resolvedHost,
+    ...((customHeaders as Record<string, string>) || {}),
   };
 
-  if (options.tenantHost) {
-    headers["Host"] = options.tenantHost;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
-  if (options.authToken) {
-    headers["Authorization"] = `Bearer ${options.authToken}`;
-  }
+  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-  const response = await fetch(url.toString(), {
-    ...options,
-    headers: {
-      ...headers,
-      ...(options.headers as Record<string, string>),
-    },
-    cache: options.cache ?? "no-store",
-  });
+  try {
+    const response = await fetch(url, {
+      ...restOptions,
+      headers,
+    });
 
-  const json: ApiResponse<T> = await response.json();
+    const json: ApiResponse<T> = await response.json();
 
-  if (!response.ok || !json.success) {
+    if (!response.ok || !json.success) {
+      const code = json.error?.code || `HTTP_${response.status}`;
+      const message = json.error?.message || response.statusText || "Request failed";
+      throw new ApiError(message, code, response.status, json.error?.details);
+    }
+
+    return json.data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
     throw new ApiError(
-      json.error?.code || "API_ERROR",
-      json.error?.message || `HTTP ${response.status} Error`,
-      response.status,
-      json.error?.details
+      error instanceof Error ? error.message : "Network error occurred",
+      "NETWORK_ERROR",
+      0
     );
   }
-
-  return json.data;
 }
