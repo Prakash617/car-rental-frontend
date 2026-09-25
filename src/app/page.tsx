@@ -6,13 +6,14 @@ import { SAMPLE_FLEET } from "@/lib/mock-data";
 import { Navbar } from "@/components/navigation/Navbar";
 import { ThemePreviewBanner } from "@/components/themes/ThemePreviewBanner";
 import { FAQSection } from "@/components/storefront/FAQSection";
+import { PlatformLanding } from "@/components/platform/PlatformLanding";
 import { getPublicFAQs } from "@/lib/api/dashboard";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function TenantHomePage({ searchParams }: PageProps) {
+export default async function HomePage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const headerList = await headers();
   const host = headerList.get("host") || "localhost:3000";
@@ -20,19 +21,29 @@ export default async function TenantHomePage({ searchParams }: PageProps) {
   const rawPreview = resolvedSearchParams.theme_preview;
   const previewThemeId = typeof rawPreview === "string" ? rawPreview : null;
 
-  // Resolve tenant configuration & handle ephemeral live theme preview
-  const { branding, isPreview } = await resolveTenant(host, previewThemeId);
+  // Resolve tenant configuration vs Platform Root
+  const resolution = await resolveTenant(host, previewThemeId);
+
+  // 1. If accessing the Root SaaS Platform Domain (localhost:3000 / platform.localhost)
+  // render the Platform Marketing Portal & Super-Admin Launchpad
+  if (resolution.isPlatform) {
+    return <PlatformLanding />;
+  }
+
+  // 2. If accessing a Tenant Subdomain (e.g. apex.localhost:3000) or Custom Domain
+  // render that specific tenant's branded customer storefront
+  const { branding, isPreview } = resolution;
 
   // Dynamically resolve the theme definition (luxury, modern, adventure, urban, classic, minimal)
   const theme = getThemeDefinition(branding.active_theme);
   const { HeroSection, FleetGrid, FeaturesSection, Footer } = theme.components;
 
-  // Fetch live FAQ items (silently fallback if API unavailable)
+  // Fetch live FAQ items for this tenant
   let faqs: import("@/lib/api/dashboard").FAQItem[] = [];
   try {
-    faqs = await getPublicFAQs();
+    faqs = await getPublicFAQs(host);
   } catch {
-    // FAQs are optional — don't fail the page
+    // FAQs are optional
   }
 
   return (

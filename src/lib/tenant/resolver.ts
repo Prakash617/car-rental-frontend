@@ -2,6 +2,8 @@ import { TenantBranding } from "@/types";
 import { THEME_REGISTRY } from "@/lib/themes/registry";
 
 export interface TenantResolution {
+  isPlatform: boolean;
+  subdomain: string | null;
   branding: TenantBranding;
   isPreview: boolean;
   previewThemeId?: string;
@@ -19,18 +21,54 @@ const DEFAULT_BRANDING: TenantBranding = {
   currency: "USD",
   timezone: "UTC",
   active_theme: "luxury",
+  hero_title: "The Pinnacle of Automotive Luxury",
+  hero_subtitle: "Experience peerless performance and white-glove concierge mobility.",
+  seo_meta_title: "Apex Luxury Concierge | Exotic & Luxury Automobile Hire",
+  seo_meta_description: "Curated exotic fleet, private tarmac delivery, and 24/7 dedicated concierge service.",
 };
 
 /**
- * Resolves the tenant branding and handles non-destructive ephemeral live theme preview.
+ * Checks if a hostname belongs to the root SaaS Platform itself
+ * (e.g. localhost:3000, 127.0.0.1:3000, platform.localhost)
+ */
+export function isPlatformRoot(hostname: string): boolean {
+  const clean = hostname.split(":")[0].toLowerCase();
+  return (
+    clean === "localhost" ||
+    clean === "127.0.0.1" ||
+    clean === "platform.localhost" ||
+    clean === "admin.localhost" ||
+    clean === "platform.local"
+  );
+}
+
+/**
+ * Extracts tenant subdomain from request host
+ * (e.g. "apex.localhost:3000" -> "apex")
+ */
+export function extractTenantSubdomain(hostname: string): string | null {
+  const clean = hostname.split(":")[0].toLowerCase();
+  if (clean.endsWith(".localhost")) {
+    const sub = clean.slice(0, -".localhost".length);
+    if (sub !== "platform" && sub !== "admin" && sub !== "www") {
+      return sub;
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolves the tenant context based on hostname and optional ephemeral live theme preview.
  */
 export async function resolveTenant(
   hostnameHeader?: string | null,
   previewParam?: string | null
 ): Promise<TenantResolution> {
   const hostname = hostnameHeader || "localhost:3000";
+  const isPlatform = isPlatformRoot(hostname);
+  const subdomain = extractTenantSubdomain(hostname);
 
-  // Check if live preview mode is triggered via ephemeral query param or header
+  // Check if live preview mode is triggered via ephemeral query param
   const validPreviewTheme =
     previewParam && previewParam in THEME_REGISTRY
       ? (previewParam as TenantBranding["active_theme"])
@@ -38,12 +76,17 @@ export async function resolveTenant(
 
   const isPreview = Boolean(validPreviewTheme);
 
-  // In production, this can also query the backend tenant API or Redis cache.
-  // For multi-tenant domain resolution:
+  // Dynamic branding for the resolved tenant
   const branding: TenantBranding = {
     ...DEFAULT_BRANDING,
     ...(isPreview && validPreviewTheme ? { active_theme: validPreviewTheme } : {}),
   };
+
+  // If a specific subdomain was targeted other than apex, customize display name
+  if (subdomain && subdomain !== "apex") {
+    const formatted = subdomain.charAt(0).toUpperCase() + subdomain.slice(1);
+    branding.name = `${formatted} Luxury Mobility`;
+  }
 
   // Dynamically match primary color to theme accent if in preview mode
   if (isPreview && validPreviewTheme && THEME_REGISTRY[validPreviewTheme]) {
@@ -51,6 +94,8 @@ export async function resolveTenant(
   }
 
   return {
+    isPlatform,
+    subdomain,
     branding,
     isPreview,
     previewThemeId: validPreviewTheme,
