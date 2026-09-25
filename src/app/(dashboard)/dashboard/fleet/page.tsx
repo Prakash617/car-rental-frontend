@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getVehicles, createVehicle, CreateVehiclePayload } from "@/lib/api/vehicles";
 import { fetchBranches, Branch } from "@/lib/api/branches";
@@ -63,13 +64,11 @@ export default function FleetManagementPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(
-    null
-  );
 
   // Add Vehicle Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateVehiclePayload>({
     branch: "",
     brand: "Ferrari",
@@ -96,9 +95,15 @@ export default function FleetManagementPage() {
     ],
   });
 
-  const showNotification = (type: "success" | "error", text: string) => {
-    setFeedback({ type, text });
-    setTimeout(() => setFeedback(null), 4000);
+  const openAddModal = () => {
+    const randomPlate = `LUX-${Math.floor(100 + Math.random() * 900)}`;
+    setFormData((prev) => ({
+      ...prev,
+      branch: prev.branch || (branches.length > 0 ? branches[0].id : ""),
+      license_plate: randomPlate,
+    }));
+    setModalError(null);
+    setShowAddModal(true);
   };
 
   const loadFleet = useCallback(async () => {
@@ -115,7 +120,9 @@ export default function FleetManagementPage() {
       }
     } catch (err) {
       console.error("Failed to load fleet:", err);
-      showNotification("error", "Failed to retrieve fleet catalog");
+      toast.error("Failed to retrieve fleet catalog", {
+        description: err instanceof Error ? err.message : "Network error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -132,10 +139,14 @@ export default function FleetManagementPage() {
       setVehicles((prev) =>
         prev.map((v) => (v.id === vehicleId ? { ...v, status: newStatus } : v))
       );
-      showNotification("success", `Vehicle status updated to ${newStatus.toUpperCase()}`);
+      toast.success("Vehicle status updated", {
+        description: `Status changed to ${newStatus.toUpperCase()}`,
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unauthorized";
-      showNotification("error", `Status update failed: ${msg}`);
+      toast.error("Status update failed", {
+        description: msg,
+      });
     } finally {
       setUpdatingId(null);
     }
@@ -143,9 +154,12 @@ export default function FleetManagementPage() {
 
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModalError(null);
     const branchId = formData.branch || (branches.length > 0 ? branches[0].id : "");
     if (!branchId) {
-      showNotification("error", "Please select a depot branch for this vehicle.");
+      const msg = "Please select a depot branch for this vehicle.";
+      setModalError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -157,15 +171,18 @@ export default function FleetManagementPage() {
       };
       const created = await createVehicle(payload, token || undefined);
       setVehicles((prev) => [created, ...prev]);
-      showNotification("success", `Vehicle ${created.brand} ${created.model} added to fleet!`);
+      toast.success(`Vehicle ${created.brand} ${created.model} added to fleet!`, {
+        description: `License Plate: ${created.license_plate} · Daily Rate: $${created.daily_rate}/day`,
+      });
       setShowAddModal(false);
-      // Reset form
+      // Reset form with a fresh random license plate
+      const nextPlate = `LUX-${Math.floor(100 + Math.random() * 900)}`;
       setFormData({
         branch: branches[0]?.id || "",
         brand: "",
         model: "",
         year: 2025,
-        license_plate: "",
+        license_plate: nextPlate,
         category: "luxury",
         transmission: "automatic",
         fuel_type: "petrol",
@@ -181,7 +198,10 @@ export default function FleetManagementPage() {
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to create vehicle";
-      showNotification("error", msg);
+      setModalError(msg);
+      toast.error("Failed to create vehicle", {
+        description: msg,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -214,19 +234,6 @@ export default function FleetManagementPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {feedback && (
-            <div
-              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md animate-fade-in border ${
-                feedback.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                  : "bg-rose-500/10 border-rose-500/20 text-rose-400"
-              }`}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>{feedback.text}</span>
-            </div>
-          )}
-
           <Button
             variant="outline"
             size="sm"
@@ -238,7 +245,7 @@ export default function FleetManagementPage() {
           </Button>
 
           <Button
-            onClick={() => setShowAddModal(true)}
+            onClick={openAddModal}
             className="bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-semibold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5"
           >
             <Plus className="h-4 w-4" />
@@ -498,14 +505,30 @@ export default function FleetManagementPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1">
-                    License Plate *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-zinc-300">
+                      License Plate *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomPlate = `LUX-${Math.floor(100 + Math.random() * 900)}`;
+                        setFormData((prev) => ({ ...prev, license_plate: randomPlate }));
+                        setModalError(null);
+                      }}
+                      className="text-[10px] font-mono text-[#D4AF37] hover:underline"
+                    >
+                      Generate New
+                    </button>
+                  </div>
                   <Input
                     required
                     placeholder="LUX-911"
                     value={formData.license_plate}
-                    onChange={(e) => setFormData({ ...formData, license_plate: e.target.value.toUpperCase() })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, license_plate: e.target.value.toUpperCase() });
+                      setModalError(null);
+                    }}
                     className="bg-black/50 border-white/[0.08] text-white text-xs font-mono uppercase"
                   />
                 </div>
@@ -672,6 +695,17 @@ export default function FleetManagementPage() {
                   className="w-full rounded-md bg-black/50 border border-white/[0.08] p-2.5 text-xs text-white focus:outline-none"
                 />
               </div>
+
+              {/* Modal Error Banner */}
+              {modalError && (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs animate-in fade-in slide-in-from-top-1">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                  <div className="flex-1">
+                    <span className="font-semibold block text-rose-200 mb-0.5">Registration Failed</span>
+                    <span className="text-rose-300/90 leading-relaxed">{modalError}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Form Buttons */}
               <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end gap-3">

@@ -22,9 +22,36 @@ export interface RequestOptions extends RequestInit {
   token?: string;
 }
 
+function formatErrorMessage(rawMessage?: string, details?: unknown): string {
+  if (details && typeof details === "object" && !Array.isArray(details)) {
+    const errorEntries = Object.entries(details as Record<string, unknown>);
+    if (errorEntries.length > 0) {
+      const formatted = errorEntries.map(([field, err]) => {
+        const fieldName = field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const errText = Array.isArray(err) ? err.join(", ") : String(err);
+        return `${fieldName}: ${errText}`;
+      });
+      return formatted.join(" | ");
+    }
+  }
+
+  if (rawMessage) {
+    if (rawMessage.includes("ErrorDetail")) {
+      const cleaned = rawMessage
+        .replace(/ErrorDetail\(string=['"](.*?)['"], code=['"].*?['"]\)/g, "$1")
+        .replace(/\{|\}|\[|\]|'/g, "")
+        .trim();
+      if (cleaned) return cleaned;
+    }
+    return rawMessage;
+  }
+
+  return "Request failed";
+}
+
 /**
- * Enterprise API client that attaches tenant hostname routing headers
- * and unwraps standardized response envelopes.
+ * Enterprise API client that attaches tenant hostname routing headers,
+ * auto-resolves authentication tokens, and unwraps standardized response envelopes.
  */
 export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { tenantHost, token, headers: customHeaders, ...restOptions } = options;
@@ -32,6 +59,21 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
   const resolvedHost =
     tenantHost ||
     (typeof window !== "undefined" ? window.location.host : "localhost:3000");
+
+  let authToken = token;
+  if (!authToken && typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("apex_saas_auth_session");
+      if (stored) {
+        const session = JSON.parse(stored);
+        if (session?.access_token) {
+          authToken = session.access_token;
+        }
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
+  }
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -45,8 +87,8 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
     headers.Host = resolvedHost;
   }
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
   }
 
   const cleanEndpoint = endpoint.replace(/^\/api\/v1/, "");
@@ -59,11 +101,19 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
       headers,
     });
 
-    const json: ApiResponse<T> = await response.json();
+    let json: ApiResponse<T>;
+    try {
+      json = await response.json();
+    } catch {
+      if (!response.ok) {
+        throw new ApiError(response.statusText || "Server error", `HTTP_${response.status}`, response.status);
+      }
+      return undefined as unknown as T;
+    }
 
     if (!response.ok || !json.success) {
       const code = json.error?.code || `HTTP_${response.status}`;
-      const message = json.error?.message || response.statusText || "Request failed";
+      const message = formatErrorMessage(json.error?.message, json.error?.details) || response.statusText || "Request failed";
       throw new ApiError(message, code, response.status, json.error?.details);
     }
 

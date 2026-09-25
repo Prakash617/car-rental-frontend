@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import {
   fetchFleetHealthOverview,
@@ -118,10 +119,11 @@ export default function FleetMaintenancePage() {
     try {
       const updated = await startMaintenance(recordId, token || undefined);
       setRecords((prev) => prev.map((r) => (r.id === recordId ? updated : r)));
+      toast.success("Service status updated to IN PROGRESS");
       await loadData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to start service";
-      alert(msg);
+      toast.error("Service transition failed", { description: msg });
     } finally {
       setIsProcessing(false);
     }
@@ -144,10 +146,11 @@ export default function FleetMaintenancePage() {
         token || undefined
       );
       setRecords((prev) => prev.map((r) => (r.id === recordId ? updated : r)));
+      toast.success("Maintenance service completed and vehicle restored to available");
       await loadData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to complete service";
-      alert(msg);
+      toast.error("Completion failed", { description: msg });
     } finally {
       setIsProcessing(false);
     }
@@ -156,7 +159,7 @@ export default function FleetMaintenancePage() {
   const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!scheduleForm.vehicle) {
-      alert("Please select a vehicle.");
+      toast.error("Please select a vehicle to service");
       return;
     }
     setIsProcessing(true);
@@ -164,10 +167,13 @@ export default function FleetMaintenancePage() {
       const created = await scheduleMaintenance(scheduleForm, token || undefined);
       setRecords((prev) => [created, ...prev]);
       setShowScheduleModal(false);
+      toast.success("Maintenance window scheduled", {
+        description: `Service booked for vehicle at ${created.service_center}`,
+      });
       await loadData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to schedule service";
-      alert(msg);
+      toast.error("Scheduling failed", { description: msg });
     } finally {
       setIsProcessing(false);
     }
@@ -176,7 +182,7 @@ export default function FleetMaintenancePage() {
   const handleInspectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inspectionForm.vehicle_id) {
-      alert("Please select a vehicle.");
+      toast.error("Please select a vehicle to inspect");
       return;
     }
     setIsProcessing(true);
@@ -184,10 +190,13 @@ export default function FleetMaintenancePage() {
       const created = await createInspection(inspectionForm, token || undefined);
       setInspections((prev) => [created, ...prev]);
       setShowInspectionModal(false);
+      toast.success("Inspection log recorded", {
+        description: `${created.inspection_type.toUpperCase()} recorded with condition ${created.exterior_condition}`,
+      });
       await loadData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to record inspection";
-      alert(msg);
+      toast.error("Inspection recording failed", { description: msg });
     } finally {
       setIsProcessing(false);
     }

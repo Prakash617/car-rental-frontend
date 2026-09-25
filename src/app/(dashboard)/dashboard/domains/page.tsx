@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import {
   fetchTenantDomains,
@@ -32,9 +33,6 @@ export default function CustomDomainsPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newDomain, setNewDomain] = useState("");
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
-    null
-  );
 
   const loadDomains = useCallback(async () => {
     try {
@@ -42,6 +40,7 @@ export default function CustomDomainsPage() {
       setDomains(data);
     } catch (err) {
       console.error("Failed to load domains:", err);
+      toast.error("Failed to load custom domains");
     } finally {
       setIsLoading(false);
     }
@@ -55,19 +54,17 @@ export default function CustomDomainsPage() {
     e.preventDefault();
     if (!newDomain) return;
     setIsProcessing(true);
-    setFeedback(null);
     try {
       const created = await addCustomDomain(newDomain.trim(), token || undefined);
       setDomains((prev) => [...prev, created]);
       setShowAddModal(false);
       setNewDomain("");
-      setFeedback({
-        type: "success",
-        message: `Domain '${created.domain}' added. Please configure DNS CNAME record.`,
+      toast.success("Domain registered", {
+        description: `Domain '${created.domain}' added. Please configure DNS CNAME record.`,
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to add domain";
-      setFeedback({ type: "error", message: msg });
+      toast.error("Domain addition failed", { description: msg });
     } finally {
       setIsProcessing(false);
     }
@@ -75,17 +72,15 @@ export default function CustomDomainsPage() {
 
   const handleVerify = async (domainId: string) => {
     setIsProcessing(true);
-    setFeedback(null);
     try {
       const updated = await verifyCustomDomain(domainId, token || undefined);
       setDomains((prev) => prev.map((d) => (d.id === domainId ? updated : d)));
-      setFeedback({
-        type: "success",
-        message: `Domain '${updated.domain}' verified with active Let's Encrypt TLS 1.3 certificate!`,
+      toast.success("Domain verified!", {
+        description: `Domain '${updated.domain}' verified with active Let's Encrypt TLS 1.3 certificate!`,
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "DNS verification failed";
-      setFeedback({ type: "error", message: msg });
+      toast.error("Verification failed", { description: msg });
     } finally {
       setIsProcessing(false);
     }
@@ -93,7 +88,7 @@ export default function CustomDomainsPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert(`Copied "${text}" to clipboard.`);
+    toast.info("Copied to clipboard", { description: text });
   };
 
   return (
@@ -135,22 +130,6 @@ export default function CustomDomainsPage() {
         </div>
       </div>
 
-      {feedback && (
-        <div
-          className={`flex items-center gap-3 rounded-lg border p-4 text-xs font-medium ${
-            feedback.type === "success"
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-              : "border-rose-500/30 bg-rose-500/10 text-rose-300"
-          }`}
-        >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-          ) : (
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
-      )}
 
       {/* DNS Configuration Guide */}
       <Card className="border-white/[0.08] bg-zinc-950/60 p-5">

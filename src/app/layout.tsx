@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Enterprise multi-tenant automotive hire platform with dynamic theme engine and real-time fleet availability.",
 };
 
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,6 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} bg-black text-slate-100 antialiased selection:bg-[#D4AF37]/30 selection:text-white`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

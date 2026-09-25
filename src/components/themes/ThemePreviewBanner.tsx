@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { THEME_REGISTRY, getAllThemes } from "@/lib/themes/registry";
+import { updateTenantThemeConfig } from "@/lib/api/dashboard";
 import { Palette, X, Check, Sparkles } from "lucide-react";
 
 interface ThemePreviewBannerProps {
@@ -15,6 +16,29 @@ export function ThemePreviewBanner({ currentThemeId, isPreview }: ThemePreviewBa
   const searchParams = useSearchParams();
   const [isApplying, setIsApplying] = useState(false);
   const [appliedNotification, setAppliedNotification] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("apex_saas_auth_session");
+      if (stored) {
+        const session = JSON.parse(stored);
+        if (
+          session?.access_token &&
+          ["owner", "admin", "manager", "staff"].includes(session?.role)
+        ) {
+          setIsAdmin(true);
+        }
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
+  }, []);
+
+  // Only render if actively previewing and accessed by an authorized staff/admin
+  if (!isPreview || !isAdmin) {
+    return null;
+  }
 
   const themes = getAllThemes();
   const currentMeta = THEME_REGISTRY[currentThemeId] || THEME_REGISTRY.luxury;
@@ -28,18 +52,26 @@ export function ThemePreviewBanner({ currentThemeId, isPreview }: ThemePreviewBa
   const handleExitPreview = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("theme_preview");
+    params.delete("preview_theme");
     const query = params.toString();
     router.push(query ? `?${query}` : "/");
   };
 
-  const handleApplyToTenant = () => {
+  const handleApplyToTenant = async () => {
     setIsApplying(true);
-    // Simulate tenant settings API commit
-    setTimeout(() => {
-      setIsApplying(false);
+    try {
+      await updateTenantThemeConfig({ active_theme: currentThemeId });
       setAppliedNotification(true);
-      setTimeout(() => setAppliedNotification(false), 4000);
-    }, 800);
+      setTimeout(() => {
+        setAppliedNotification(false);
+        handleExitPreview();
+      }, 1500);
+    } catch (err) {
+      console.error("Failed to commit theme to tenant:", err);
+      alert("Unable to save theme. Only authenticated tenant administrators can activate themes.");
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   return (
