@@ -36,10 +36,14 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
-    Host: resolvedHost,
     "X-Forwarded-Host": resolvedHost,
     ...((customHeaders as Record<string, string>) || {}),
   };
+
+  // The 'Host' header is forbidden in browser fetch() specifications; only attach on SSR
+  if (typeof window === "undefined") {
+    headers.Host = resolvedHost;
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
