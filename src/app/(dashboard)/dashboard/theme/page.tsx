@@ -24,6 +24,7 @@ import { ThemeId } from "@/lib/themes/types";
 export default function ThemeCustomizerPage() {
   const { token } = useAuth();
   const [activeTheme, setActiveTheme] = useState<ThemeId>("luxury");
+  const [persistedTheme, setPersistedTheme] = useState<ThemeId>("luxury");
   const [primaryColor, setPrimaryColor] = useState("#D4AF37");
   const [accentColor, setAccentColor] = useState("#B38F26");
   const [heroTitle, setHeroTitle] = useState("The Pinnacle of Automotive Luxury");
@@ -39,7 +40,10 @@ export default function ThemeCustomizerPage() {
       try {
         const config = await getManageableWebsiteConfig(token || undefined);
         if (config) {
-          if (config.active_theme) setActiveTheme(config.active_theme as ThemeId);
+          if (config.active_theme) {
+            setActiveTheme(config.active_theme as ThemeId);
+            setPersistedTheme(config.active_theme as ThemeId);
+          }
           if (config.primary_color) setPrimaryColor(config.primary_color);
           if (config.accent_color) setAccentColor(config.accent_color);
           if (config.support_email) setSupportEmail(config.support_email);
@@ -53,8 +57,8 @@ export default function ThemeCustomizerPage() {
     loadConfig();
   }, [token]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSaving(true);
     setFeedback(null);
 
@@ -72,6 +76,7 @@ export default function ThemeCustomizerPage() {
         token || undefined
       );
 
+      setPersistedTheme(activeTheme);
       setFeedback({
         type: "success",
         message: "Theme and branding configuration saved successfully!",
@@ -79,6 +84,51 @@ export default function ThemeCustomizerPage() {
       setTimeout(() => setFeedback(null), 4000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update branding settings";
+      setFeedback({
+        type: "error",
+        message: msg,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleActivateTheme = async (themeId: ThemeId, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActiveTheme(themeId);
+    const preset = THEME_PRESET_CONFIG[themeId];
+    const newPrimary = preset ? preset.primaryColor : primaryColor;
+    const newAccent = preset ? preset.accentColor : accentColor;
+    if (preset) {
+      setPrimaryColor(newPrimary);
+      setAccentColor(newAccent);
+    }
+
+    setIsSaving(true);
+    setFeedback(null);
+
+    try {
+      await updateTenantThemeConfig(
+        {
+          active_theme: themeId,
+          primary_color: newPrimary,
+          accent_color: newAccent,
+          hero_title: heroTitle,
+          hero_subtitle: heroSubtitle,
+          support_email: supportEmail,
+          support_phone: supportPhone,
+        },
+        token || undefined
+      );
+
+      setPersistedTheme(themeId);
+      setFeedback({
+        type: "success",
+        message: `"${THEME_DEFINITIONS[themeId].name}" is now the permanently active storefront theme!`,
+      });
+      setTimeout(() => setFeedback(null), 4000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to activate theme";
       setFeedback({
         type: "error",
         message: msg,
@@ -126,7 +176,7 @@ const THEME_PRESET_CONFIG: Record<ThemeId, { primaryColor: string; accentColor: 
 
         <div className="flex items-center gap-3">
           <Link
-            href={`/?preview_theme=${activeTheme}`}
+            href={`/?theme_preview=${activeTheme}`}
             target="_blank"
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-white hover:bg-white/[0.1] transition-colors"
           >
@@ -327,7 +377,7 @@ const THEME_PRESET_CONFIG: Record<ThemeId, { primaryColor: string; accentColor: 
 
         {/* Form Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.08]">
-          <Link href={`/?preview_theme=${activeTheme}`} target="_blank">
+          <Link href={`/?theme_preview=${activeTheme}`} target="_blank">
             <Button
               type="button"
               variant="outline"

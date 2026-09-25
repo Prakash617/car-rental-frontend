@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { TenantBranding } from "@/types";
-import { Phone, Menu, X, Car } from "lucide-react";
+import { Phone, Menu, X, Car, Sparkles, TrendingUp } from "lucide-react";
 
 interface NavbarProps {
   branding: TenantBranding;
@@ -13,7 +13,7 @@ export function Navbar({ branding }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-black/60 border-b border-white/[0.08] transition-colors">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-black/75 border-b border-white/[0.08] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand identity */}
         <Link href="/" className="flex items-center gap-2.5 group">
@@ -34,44 +34,57 @@ export function Navbar({ branding }: NavbarProps) {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 text-xs uppercase tracking-wider font-medium text-zinc-300">
-          <a href="#fleet" className="hover:text-white transition-colors">
-            Fleet Catalog
-          </a>
-          <a href="#features" className="hover:text-white transition-colors">
-            Standards & Services
-          </a>
-          <a href="#locations" className="hover:text-white transition-colors">
+        <nav className="hidden lg:flex items-center gap-7 text-xs uppercase tracking-wider font-medium text-zinc-300">
+          <Link href="/fleet" className="hover:text-white transition-colors">
+            Fleet Showroom
+          </Link>
+
+          {/* Prominent Link for Second User Persona (Vehicle Consignor / Host) */}
+          <Link
+            href="/list-your-car"
+            className="group relative flex items-center gap-1.5 text-zinc-200 hover:text-white transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span>List Your Car</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[9px] font-mono text-[#D4AF37] lowercase">
+              earn 70%
+            </span>
+          </Link>
+
+          <Link href="/locations" className="hover:text-white transition-colors">
             Locations
-          </a>
-          <a href="#contact" className="hover:text-white transition-colors">
+          </Link>
+          <Link href="/about" className="hover:text-white transition-colors">
+            Standards & About
+          </Link>
+          <Link href="/contact" className="hover:text-white transition-colors">
             Contact
-          </a>
+          </Link>
         </nav>
 
         {/* Right CTA */}
-        <div className="hidden sm:flex items-center gap-4">
-          <a
-            href={`tel:${branding.support_phone}`}
-            className="flex items-center gap-2 text-xs font-mono text-zinc-300 hover:text-white transition-colors"
+        <div className="hidden sm:flex items-center gap-3">
+          <Link
+            href="/list-your-car"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider uppercase text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] hover:border-[#D4AF37]/40 transition-all flex items-center gap-1.5"
           >
-            <Phone className="w-3.5 h-3.5 text-zinc-400" />
-            <span>{branding.support_phone}</span>
-          </a>
+            <TrendingUp className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span>Host Consignment</span>
+          </Link>
 
-          <a
-            href="#fleet"
+          <Link
+            href="/fleet"
             className="px-4 py-2 rounded-xl text-xs font-semibold tracking-wider uppercase text-black transition-all duration-200 hover:opacity-90 active:scale-95 shadow-sm"
             style={{ backgroundColor: branding.primary_color }}
           >
             Explore Fleet
-          </a>
+          </Link>
         </div>
 
         {/* Mobile Hamburger */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
+          className="lg:hidden p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
           aria-label="Toggle Navigation Menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -80,37 +93,69 @@ export function Navbar({ branding }: NavbarProps) {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden px-4 pt-2 pb-6 bg-zinc-950/95 border-b border-zinc-800 space-y-4">
+        <div className="lg:hidden px-4 pt-2 pb-6 bg-zinc-950/98 border-b border-zinc-800 space-y-4">
           <div className="flex flex-col space-y-3 text-sm text-zinc-300 font-medium pt-2">
-            <a
-              href="#fleet"
+            <Link
+              href="/fleet"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1 hover:text-white"
             >
-              Fleet Catalog
-            </a>
-            <a
-              href="#features"
+              Fleet Showroom
+            </Link>
+            <Link
+              href="/list-your-car"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-1 text-[#D4AF37] font-semibold flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>List Your Car (Host & Earn 70%)</span>
+            </Link>
+            <Link
+              href="/locations"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1 hover:text-white"
             >
-              Standards & Services
-            </a>
+              Depot Locations & Terminals
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-1 hover:text-white"
+            >
+              Standards & Heritage
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-1 hover:text-white"
+            >
+              Private Client Desk
+            </Link>
             <a
               href={`tel:${branding.support_phone}`}
               className="py-1 text-zinc-400 flex items-center gap-2"
             >
-              <Phone className="w-4 h-4" /> {branding.support_phone}
+              <Phone className="w-4 h-4 text-[#D4AF37]" /> {branding.support_phone}
             </a>
           </div>
-          <a
-            href="#fleet"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block w-full py-3 text-center rounded-xl text-xs font-bold uppercase tracking-wider text-black"
-            style={{ backgroundColor: branding.primary_color }}
-          >
-            Explore Fleet
-          </a>
+
+          <div className="pt-2 grid grid-cols-2 gap-2">
+            <Link
+              href="/list-your-car"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2.5 text-center rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-white/[0.05] border border-white/[0.12]"
+            >
+              Host a Vehicle
+            </Link>
+            <Link
+              href="/fleet"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2.5 text-center rounded-xl text-xs font-bold uppercase tracking-wider text-black shadow-md"
+              style={{ backgroundColor: branding.primary_color }}
+            >
+              Rent a Car
+            </Link>
+          </div>
         </div>
       )}
     </header>
