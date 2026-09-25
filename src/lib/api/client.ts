@@ -49,7 +49,9 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.replace(/^\/api\/v1/, "");
+  const path = cleanEndpoint.startsWith("/") ? cleanEndpoint : `/${cleanEndpoint}`;
+  const url = `${API_BASE_URL}${path}`;
 
   try {
     const response = await fetch(url, {

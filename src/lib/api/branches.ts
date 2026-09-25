@@ -15,9 +15,9 @@ export interface Branch {
 }
 
 export async function fetchBranches(tenantHost?: string): Promise<Branch[]> {
-  return apiFetch<Branch[]>("/api/v1/branches/", {
+  return apiFetch<Branch[]>("/branches/", {
     method: "GET",
     tenantHost,
-    next: { revalidate: 3600 },
+    cache: "no-store",
   });
 }

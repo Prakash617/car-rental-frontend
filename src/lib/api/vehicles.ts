@@ -22,7 +22,7 @@ export async function fetchVehicles(
   }
 
   const query = params.toString();
-  const endpoint = query ? `/api/v1/vehicles/?${query}` : "/api/v1/vehicles/";
+  const endpoint = query ? `/vehicles/?${query}` : "/vehicles/";
 
   return apiFetch<Vehicle[]>(endpoint, {
     method: "GET",
@@ -32,12 +32,44 @@ export async function fetchVehicles(
 }
 
 export async function fetchVehicle(id: string, tenantHost?: string): Promise<Vehicle> {
-  return apiFetch<Vehicle>(`/api/v1/vehicles/${id}/`, {
+  return apiFetch<Vehicle>(`/vehicles/${id}/`, {
     method: "GET",
     tenantHost,
     cache: "no-store",
   });
 }
 
-export { fetchVehicles as getVehicles, fetchVehicle as getVehicle };
+export interface CreateVehiclePayload {
+  branch: string;
+  brand: string;
+  model: string;
+  year: number;
+  license_plate: string;
+  category: VehicleCategory;
+  transmission: "automatic" | "manual";
+  fuel_type: "petrol" | "diesel" | "hybrid" | "electric";
+  seats: number;
+  doors: number;
+  mileage: number;
+  color: string;
+  status: VehicleStatus;
+  daily_rate: string;
+  deposit_amount?: string;
+  description?: string;
+  images?: Array<{ url: string; is_primary: boolean; caption?: string }>;
+}
 
+export async function createVehicle(
+  payload: CreateVehiclePayload,
+  token?: string,
+  tenantHost?: string
+): Promise<Vehicle> {
+  return apiFetch<Vehicle>("/vehicles/", {
+    method: "POST",
+    token,
+    tenantHost,
+    body: JSON.stringify(payload),
+  });
+}
+
+export { fetchVehicles as getVehicles, fetchVehicle as getVehicle };

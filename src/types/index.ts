@@ -22,9 +22,11 @@ export interface Vehicle {
   monthly_rate?: string | null;
   deposit_amount: string;
   features: string[];
-  images: { url: string; is_primary?: boolean }[];
+  images?: { url: string; is_primary?: boolean; caption?: string }[];
   description?: string;
-  branch_id: string;
+  branch_id?: string;
+  branch?: string;
+  branch_name?: string;
 }
 
 export type BookingStatus = "pending" | "confirmed" | "active" | "completed" | "cancelled" | "rejected";
