@@ -19,6 +19,9 @@ import {
   ArrowRight,
   Database,
   Lock,
+  LogOut,
+  KeyRound,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -36,9 +39,14 @@ import { loginUser } from "@/lib/api/dashboard";
 
 export default function PlatformSuperAdminPage() {
   const [token, setToken] = useState<string | null>(null);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [overview, setOverview] = useState<PlatformOverview | null>(null);
   const [tenants, setTenants] = useState<PlatformTenant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
     null
   );
@@ -62,23 +70,24 @@ export default function PlatformSuperAdminPage() {
     setTimeout(() => setFeedback(null), 5000);
   };
 
-  // 1. Initialize Platform Superuser Auth
+  // 1. Check for existing session on mount
   useEffect(() => {
-    async function initAuth() {
-      try {
-        // Auto-authenticate with platform superuser credentials for local development
-        const session = await loginUser("admin@platform.com", "admin123456", "localhost");
-        setToken(session.access_token);
-      } catch (err) {
-        console.error("Platform admin login failed:", err);
-        showNotification("error", "Failed to authenticate platform administrator");
-        setIsLoading(false);
-      }
+    const savedToken = sessionStorage.getItem("fleetcore_platform_token");
+    if (savedToken) {
+      setToken(savedToken);
     }
-    initAuth();
   }, []);
 
-  // 2. Fetch Overview & Tenants
+  const handleLogout = useCallback(() => {
+    setToken(null);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("fleetcore_platform_token");
+    }
+    setOverview(null);
+    setTenants([]);
+  }, []);
+
+  // 2. Fetch Overview & Tenants once authenticated
   const loadPlatformData = useCallback(async (authToken: string) => {
     setIsLoading(true);
     try {
@@ -91,10 +100,14 @@ export default function PlatformSuperAdminPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load platform data";
       showNotification("error", msg);
+      // If token expired, clear session
+      if (msg.includes("401") || msg.includes("Authentication")) {
+        handleLogout();
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [handleLogout]);
 
   useEffect(() => {
     if (token) {
@@ -102,7 +115,33 @@ export default function PlatformSuperAdminPage() {
     }
   }, [token, loadPlatformData]);
 
-  // 3. Provision New Tenant
+  // 3. Handle Platform Super-Admin Login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setIsLoggingIn(true);
+
+    try {
+      const session = await loginUser(adminEmail, adminPassword, "localhost");
+      if (!session.user.is_platform_admin) {
+        throw new Error("Access Denied: This account is not a verified Platform Super-Admin.");
+      }
+      setToken(session.access_token);
+      sessionStorage.setItem("fleetcore_platform_token", session.access_token);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Authentication failed";
+      setLoginError(msg);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const fillDemoCredentials = () => {
+    setAdminEmail("admin@platform.com");
+    setAdminPassword("admin123456");
+  };
+
+  // 4. Provision New Tenant
   const handleProvision = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
@@ -134,7 +173,7 @@ export default function PlatformSuperAdminPage() {
     }
   };
 
-  // 4. Toggle Tenant Active Status
+  // 5. Toggle Tenant Active Status
   const handleToggleActive = async (tenant: PlatformTenant) => {
     if (!token) return;
     const newStatus = !tenant.is_active;
@@ -154,6 +193,122 @@ export default function PlatformSuperAdminPage() {
     }
   };
 
+  // =========================================================================
+  // VIEW: Platform Super-Admin Login Screen (Protected Gateway)
+  // =========================================================================
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+        {/* Minimal Header */}
+        <header className="w-full border-b border-white/[0.08] px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-purple-500/20">
+              F
+            </div>
+            <span className="font-bold text-white tracking-tight">FLEETCORE</span>
+          </Link>
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="text-xs text-zinc-400 hover:text-white">
+              ← Return to Platform Website
+            </Button>
+          </Link>
+        </header>
+
+        {/* Login Modal Box */}
+        <div className="max-w-md w-full mx-auto px-4 py-12">
+          <div className="rounded-2xl border border-white/[0.1] bg-zinc-950/80 p-8 shadow-2xl backdrop-blur-2xl space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h1 className="text-xl font-bold text-white tracking-tight">
+                Platform Control Plane
+              </h1>
+              <p className="text-xs text-zinc-400">
+                Restricted access for verified SaaS Platform Super-Administrators.
+              </p>
+            </div>
+
+            {loginError && (
+              <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+                  Platform Admin Email
+                </label>
+                <Input
+                  required
+                  type="email"
+                  placeholder="admin@platform.com"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  className="bg-black/50 border-white/[0.1] text-white text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+                  Password
+                </label>
+                <Input
+                  required
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="bg-black/50 border-white/[0.1] text-white text-xs"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-2.5 shadow-lg shadow-purple-600/30"
+              >
+                {isLoggingIn ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Authenticating Super-Admin...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <KeyRound className="w-3.5 h-3.5" />
+                    Authenticate Super-Admin
+                  </span>
+                )}
+              </Button>
+            </form>
+
+            {/* Quick Demo Helper */}
+            <div className="pt-4 border-t border-white/[0.08] text-center space-y-2">
+              <p className="text-[11px] text-zinc-500">Local Development Credentials:</p>
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-purple-400 hover:text-purple-300 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 transition-colors"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                Fill: admin@platform.com / admin123456
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <footer className="text-center py-6 text-[11px] text-zinc-600 font-mono">
+          FLEETCORE Cloud &middot; Public Schema Node &middot; {new Date().getFullYear()}
+        </footer>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VIEW: Authenticated Platform Super-Admin Console
+  // =========================================================================
   return (
     <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col">
       {/* Top Header */}
@@ -172,21 +327,21 @@ export default function PlatformSuperAdminPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-zinc-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>public schema</span>
+              <span>admin@platform.com</span>
             </div>
-            <div className="h-4 w-px bg-white/[0.1]" />
-            <Link href="/">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-zinc-400 hover:text-white"
-              >
-                Back to Platform Site
-              </Button>
-            </Link>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="border-white/[0.1] bg-white/[0.03] text-zinc-300 hover:text-rose-400 hover:border-rose-500/30 text-xs"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
+              Lock Console
+            </Button>
           </div>
         </div>
       </header>
