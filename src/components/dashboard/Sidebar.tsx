@@ -13,11 +13,14 @@ import {
   LogOut,
   Building2,
   ChevronRight,
+  Search,
+  HelpCircle,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthContext";
 
-const navItems = [
+const mgmtNavItems = [
   {
     label: "Overview",
     href: "/dashboard",
@@ -39,12 +42,75 @@ const navItems = [
     href: "/dashboard/customers",
     icon: Users,
   },
+];
+
+const cmsNavItems = [
   {
     label: "Theme & Branding",
     href: "/dashboard/theme",
     icon: Palette,
   },
+  {
+    label: "SEO & Content",
+    href: "/dashboard/seo",
+    icon: Search,
+  },
+  {
+    label: "FAQ Manager",
+    href: "/dashboard/faq",
+    icon: HelpCircle,
+  },
+  {
+    label: "Content Pages",
+    href: "/dashboard/pages",
+    icon: FileText,
+  },
 ];
+
+function NavGroup({
+  items,
+  pathname,
+}: {
+  items: typeof mgmtNavItems;
+  pathname: string;
+}) {
+  return (
+    <nav className="space-y-1">
+      {items.map((item) => {
+        const isActive = item.exact
+          ? pathname === item.href
+          : pathname.startsWith(item.href);
+        const Icon = item.icon;
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              isActive
+                ? "bg-white/[0.08] text-white shadow-sm border border-white/[0.08]"
+                : "text-zinc-400 hover:bg-white/[0.03] hover:text-white"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <Icon
+                className={cn(
+                  "h-4 w-4 transition-colors",
+                  isActive ? "text-primary" : "text-zinc-400 group-hover:text-white"
+                )}
+              />
+              <span>{item.label}</span>
+            </div>
+            {isActive && (
+              <ChevronRight className="h-3.5 w-3.5 text-primary opacity-80" />
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -70,63 +136,43 @@ export function Sidebar() {
       </div>
 
       {/* Main Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-          Management
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        {/* Management group */}
+        <div>
+          <div className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Management
+          </div>
+          <NavGroup items={mgmtNavItems} pathname={pathname} />
         </div>
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-            const Icon = item.icon;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-white/[0.08] text-white shadow-sm border border-white/[0.08]"
-                    : "text-zinc-400 hover:bg-white/[0.03] hover:text-white"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon
-                    className={cn(
-                      "h-4 w-4 transition-colors",
-                      isActive ? "text-primary" : "text-zinc-400 group-hover:text-white"
-                    )}
-                  />
-                  <span>{item.label}</span>
-                </div>
-                {isActive && (
-                  <ChevronRight className="h-3.5 w-3.5 text-primary opacity-80" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        {/* CMS group */}
+        <div>
+          <div className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Website CMS
+          </div>
+          <NavGroup items={cmsNavItems} pathname={pathname} />
+        </div>
 
         {/* Public Storefront Link */}
-        <div className="mt-8 mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-          Public Portal
-        </div>
-        <div className="space-y-1">
-          <Link
-            href="/"
-            target="_blank"
-            className="group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/[0.03] hover:text-white transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <ExternalLink className="h-4 w-4 text-zinc-400 group-hover:text-white" />
-              <span>View Storefront</span>
-            </div>
-            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-400 border border-white/[0.08]">
-              Live
-            </span>
-          </Link>
+        <div>
+          <div className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Public Portal
+          </div>
+          <div className="space-y-1">
+            <Link
+              href="/"
+              target="_blank"
+              className="group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/[0.03] hover:text-white transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <ExternalLink className="h-4 w-4 text-zinc-400 group-hover:text-white" />
+                <span>View Storefront</span>
+              </div>
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-400 border border-white/[0.08]">
+                Live
+              </span>
+            </Link>
+          </div>
         </div>
       </div>
 

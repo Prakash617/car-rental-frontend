@@ -61,6 +61,14 @@ export interface TenantBranding {
   currency: string;
   timezone: string;
   active_theme: "luxury" | "modern" | "classic" | "adventure" | "urban" | "minimal";
+  // Hero content
+  hero_title?: string;
+  hero_subtitle?: string;
+  // SEO metadata
+  seo_meta_title?: string;
+  seo_meta_description?: string;
+  seo_keywords?: string;
+  og_image_url?: string;
 }
 
 export interface DashboardOverview {

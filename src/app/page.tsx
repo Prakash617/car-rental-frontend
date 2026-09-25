@@ -5,6 +5,8 @@ import { getThemeDefinition } from "@/lib/themes/registry";
 import { SAMPLE_FLEET } from "@/lib/mock-data";
 import { Navbar } from "@/components/navigation/Navbar";
 import { ThemePreviewBanner } from "@/components/themes/ThemePreviewBanner";
+import { FAQSection } from "@/components/storefront/FAQSection";
+import { getPublicFAQs } from "@/lib/api/dashboard";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -24,6 +26,14 @@ export default async function TenantHomePage({ searchParams }: PageProps) {
   // Dynamically resolve the theme definition (luxury, modern, adventure, urban, classic, minimal)
   const theme = getThemeDefinition(branding.active_theme);
   const { HeroSection, FleetGrid, FeaturesSection, Footer } = theme.components;
+
+  // Fetch live FAQ items (silently fallback if API unavailable)
+  let faqs: import("@/lib/api/dashboard").FAQItem[] = [];
+  try {
+    faqs = await getPublicFAQs();
+  } catch {
+    // FAQs are optional — don't fail the page
+  }
 
   return (
     <div
@@ -50,6 +60,13 @@ export default async function TenantHomePage({ searchParams }: PageProps) {
       <div id="fleet">
         <FleetGrid vehicles={SAMPLE_FLEET} branding={branding} />
       </div>
+
+      {/* FAQ Section — live from CMS */}
+      {faqs.length > 0 && (
+        <div id="faq">
+          <FAQSection faqs={faqs} primaryColor={branding.primary_color} />
+        </div>
+      )}
 
       {/* Dynamic Theme Footer */}
       <Footer branding={branding} />

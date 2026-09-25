@@ -62,7 +62,7 @@ export const SAMPLE_FLEET: Vehicle[] = [
     ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1541348263662-e0c8de4259ba?auto=format&fit=crop&w=1200&q=80",
+        url: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1200&q=80",
         is_primary: true,
       },
     ],

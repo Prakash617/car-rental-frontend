@@ -15,7 +15,7 @@ export class ApiError extends Error {
 }
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export interface RequestOptions extends RequestInit {
   tenantHost?: string;
