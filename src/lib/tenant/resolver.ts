@@ -1,5 +1,6 @@
 import { TenantBranding } from "@/types";
 import { THEME_REGISTRY } from "@/lib/themes/registry";
+import { apiFetch } from "@/lib/api/client";
 
 export interface TenantResolution {
   isPlatform: boolean;
@@ -76,21 +77,37 @@ export async function resolveTenant(
 
   const isPreview = Boolean(validPreviewTheme);
 
-  // Dynamic branding for the resolved tenant
-  const branding: TenantBranding = {
-    ...DEFAULT_BRANDING,
-    ...(isPreview && validPreviewTheme ? { active_theme: validPreviewTheme } : {}),
-  };
+  // Default baseline branding
+  let branding: TenantBranding = { ...DEFAULT_BRANDING };
 
-  // If a specific subdomain was targeted other than apex, customize display name
-  if (subdomain && subdomain !== "apex") {
-    const formatted = subdomain.charAt(0).toUpperCase() + subdomain.slice(1);
-    branding.name = `${formatted} Luxury Mobility`;
+  // If resolving a tenant (subdomain or custom domain), attempt to fetch live website config
+  if (!isPlatform) {
+    try {
+      const liveConfig = await apiFetch<TenantBranding>("/api/v1/website/config/", {
+        tenantHost: hostname,
+        cache: "no-store",
+      });
+      if (liveConfig && liveConfig.name) {
+        branding = {
+          ...branding,
+          ...liveConfig,
+        };
+      }
+    } catch {
+      // Fallback: customize display name if non-default subdomain
+      if (subdomain && subdomain !== "apex") {
+        const formatted = subdomain.charAt(0).toUpperCase() + subdomain.slice(1);
+        branding.name = `${formatted} Luxury Mobility`;
+      }
+    }
   }
 
-  // Dynamically match primary color to theme accent if in preview mode
-  if (isPreview && validPreviewTheme && THEME_REGISTRY[validPreviewTheme]) {
-    branding.primary_color = THEME_REGISTRY[validPreviewTheme].accentColor;
+  // Ephemeral theme preview overrides active theme
+  if (isPreview && validPreviewTheme) {
+    branding.active_theme = validPreviewTheme;
+    if (THEME_REGISTRY[validPreviewTheme]) {
+      branding.primary_color = THEME_REGISTRY[validPreviewTheme].accentColor;
+    }
   }
 
   return {

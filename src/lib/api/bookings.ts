@@ -76,5 +76,41 @@ export async function cancelBooking(
   });
 }
 
+export async function confirmBooking(
+  bookingId: string,
+  token?: string,
+  tenantHost?: string
+): Promise<Booking> {
+  return apiFetch<Booking>(`/api/v1/bookings/${bookingId}/confirm/`, {
+    method: "POST",
+    token,
+    tenantHost,
+  });
+}
+
+export async function activateBooking(
+  bookingId: string,
+  token?: string,
+  tenantHost?: string
+): Promise<Booking> {
+  return apiFetch<Booking>(`/api/v1/bookings/${bookingId}/activate/`, {
+    method: "POST",
+    token,
+    tenantHost,
+  });
+}
+
+export async function completeBooking(
+  bookingId: string,
+  token?: string,
+  tenantHost?: string
+): Promise<Booking> {
+  return apiFetch<Booking>(`/api/v1/bookings/${bookingId}/complete/`, {
+    method: "POST",
+    token,
+    tenantHost,
+  });
+}
+
 export { fetchBookings as getBookings };
 

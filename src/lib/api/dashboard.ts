@@ -94,6 +94,17 @@ export async function updateVehicleStatus(
   });
 }
 
+export interface CreateCustomerPayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  driver_license_number: string;
+  license_expiry_date: string;
+  date_of_birth: string;
+  country?: string;
+}
+
 /**
  * Fetch verified customer directory
  */
@@ -102,6 +113,22 @@ export async function getCustomers(token?: string, tenantHost?: string): Promise
     token,
     tenantHost,
     cache: "no-store",
+  });
+}
+
+/**
+ * Register a new customer
+ */
+export async function createCustomer(
+  payload: CreateCustomerPayload,
+  token?: string,
+  tenantHost?: string
+): Promise<Customer> {
+  return apiFetch<Customer>("/customers/", {
+    method: "POST",
+    token,
+    tenantHost,
+    body: JSON.stringify(payload),
   });
 }
 

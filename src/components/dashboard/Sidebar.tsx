@@ -16,6 +16,9 @@ import {
   Search,
   HelpCircle,
   FileText,
+  Wrench,
+  Globe,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -42,6 +45,11 @@ const mgmtNavItems = [
     href: "/dashboard/customers",
     icon: Users,
   },
+  {
+    label: "Fleet Maintenance",
+    href: "/dashboard/maintenance",
+    icon: Wrench,
+  },
 ];
 
 const cmsNavItems = [
@@ -64,6 +72,16 @@ const cmsNavItems = [
     label: "Content Pages",
     href: "/dashboard/pages",
     icon: FileText,
+  },
+  {
+    label: "Custom Domains",
+    href: "/dashboard/domains",
+    icon: Globe,
+  },
+  {
+    label: "Audit Trail",
+    href: "/dashboard/audit",
+    icon: ShieldCheck,
   },
 ];
 

@@ -14,13 +14,20 @@ import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { getBookings, cancelBooking } from "@/lib/api/bookings";
+import {
+  getBookings,
+  cancelBooking,
+  confirmBooking,
+  activateBooking,
+  completeBooking,
+} from "@/lib/api/bookings";
 import { Booking } from "@/types";
 
 export default function BookingsManagementPage() {
   const { token } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -40,19 +47,78 @@ export default function BookingsManagementPage() {
     loadBookings();
   }, [loadBookings]);
 
-  const handleCancelBooking = async (ref: string) => {
-    if (!confirm(`Are you sure you want to cancel reservation ${ref}?`)) return;
+  const handleCancelBooking = async (booking: Booking) => {
+    if (!confirm(`Are you sure you want to cancel reservation ${booking.booking_reference}?`)) return;
+    setIsProcessing(true);
     try {
-      await cancelBooking(ref, "Cancelled by tenant concierge", token || undefined);
+      const updated = await cancelBooking(booking.id, "Cancelled by tenant concierge", token || undefined);
       setBookings((prev) =>
-        prev.map((b) => (b.booking_reference === ref ? { ...b, status: "cancelled" } : b))
+        prev.map((b) => (b.id === booking.id ? { ...b, status: "cancelled" } : b))
       );
-      if (selectedBooking?.booking_reference === ref) {
+      if (selectedBooking?.id === booking.id) {
         setSelectedBooking((prev) => (prev ? { ...prev, status: "cancelled" } : null));
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Cancellation failed";
       alert(`Failed to cancel booking: ${msg}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmBooking = async (booking: Booking) => {
+    setIsProcessing(true);
+    try {
+      const updated = await confirmBooking(booking.id, token || undefined);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === booking.id ? { ...b, status: updated.status } : b))
+      );
+      if (selectedBooking?.id === booking.id) {
+        setSelectedBooking((prev) => (prev ? { ...prev, status: updated.status } : null));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Confirmation failed";
+      alert(`Failed to confirm booking: ${msg}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleActivateBooking = async (booking: Booking) => {
+    if (!confirm(`Dispatch vehicle and activate rental for reservation ${booking.booking_reference}?`)) return;
+    setIsProcessing(true);
+    try {
+      const updated = await activateBooking(booking.id, token || undefined);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === booking.id ? { ...b, status: updated.status } : b))
+      );
+      if (selectedBooking?.id === booking.id) {
+        setSelectedBooking((prev) => (prev ? { ...prev, status: updated.status } : null));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Activation failed";
+      alert(`Failed to activate booking: ${msg}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCompleteBooking = async (booking: Booking) => {
+    if (!confirm(`Mark reservation ${booking.booking_reference} as completed and return vehicle to available fleet?`)) return;
+    setIsProcessing(true);
+    try {
+      const updated = await completeBooking(booking.id, token || undefined);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === booking.id ? { ...b, status: updated.status } : b))
+      );
+      if (selectedBooking?.id === booking.id) {
+        setSelectedBooking((prev) => (prev ? { ...prev, status: updated.status } : null));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Completion failed";
+      alert(`Failed to complete booking: ${msg}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -217,14 +283,52 @@ export default function BookingsManagementPage() {
 
                     {/* Action */}
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      {b.status !== "cancelled" && (
-                        <button
-                          onClick={() => handleCancelBooking(b.booking_reference)}
-                          className="text-xs text-rose-400 hover:text-rose-300 hover:underline transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-1.5">
+                        {b.status === "pending" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isProcessing}
+                            onClick={() => handleConfirmBooking(b)}
+                            className="h-7 px-2 text-[11px] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+                          >
+                            Confirm
+                          </Button>
+                        )}
+                        {b.status === "confirmed" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isProcessing}
+                            onClick={() => handleActivateBooking(b)}
+                            className="h-7 px-2 text-[11px] border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                          >
+                            Dispatch
+                          </Button>
+                        )}
+                        {b.status === "active" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isProcessing}
+                            onClick={() => handleCompleteBooking(b)}
+                            className="h-7 px-2 text-[11px] border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                          >
+                            Return
+                          </Button>
+                        )}
+                        {(b.status === "pending" || b.status === "confirmed") && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={isProcessing}
+                            onClick={() => handleCancelBooking(b)}
+                            className="h-7 px-2 text-[11px] text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -304,12 +408,43 @@ export default function BookingsManagementPage() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.08]">
-                {selectedBooking.status !== "cancelled" && (
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+                {selectedBooking.status === "pending" && (
+                  <Button
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => handleConfirmBooking(selectedBooking)}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
+                  >
+                    Confirm Reservation
+                  </Button>
+                )}
+                {selectedBooking.status === "confirmed" && (
+                  <Button
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => handleActivateBooking(selectedBooking)}
+                    className="text-xs bg-blue-600 hover:bg-blue-500 text-white"
+                  >
+                    Dispatch Vehicle
+                  </Button>
+                )}
+                {selectedBooking.status === "active" && (
+                  <Button
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => handleCompleteBooking(selectedBooking)}
+                    className="text-xs bg-purple-600 hover:bg-purple-500 text-white"
+                  >
+                    Complete & Return
+                  </Button>
+                )}
+                {(selectedBooking.status === "pending" || selectedBooking.status === "confirmed") && (
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleCancelBooking(selectedBooking.booking_reference)}
+                    disabled={isProcessing}
+                    onClick={() => handleCancelBooking(selectedBooking)}
                     className="text-xs"
                   >
                     Cancel Booking
