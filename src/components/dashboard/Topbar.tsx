@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ExternalLink, ShieldCheck } from "lucide-react";
+import { Menu, X, ExternalLink, ShieldCheck, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export function Topbar() {
@@ -47,7 +47,7 @@ export function Topbar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold font-mono">
             {user?.first_name?.[0] || "J"}
           </div>
-          <div className="hidden sm:block text-left">
+          <div className="hidden sm:block text-left mr-2">
             <span className="block text-xs font-semibold text-white leading-tight">
               {user ? `${user.first_name} ${user.last_name}` : "Julian Vane"}
             </span>
@@ -55,6 +55,15 @@ export function Topbar() {
               Staff Concierge
             </span>
           </div>
+
+          <button
+            onClick={() => logout()}
+            title="Sign Out of Concierge OS"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-rose-400 transition-colors border border-white/[0.08] hover:border-rose-500/30 rounded-md px-2.5 py-1.5 bg-white/[0.03]"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
 

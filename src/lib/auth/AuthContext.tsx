@@ -23,28 +23,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore stored session on mount or auto-login with demo credentials
+  // Restore stored session on mount if previously logged in
   useEffect(() => {
     async function initAuth() {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
         if (stored) {
           const parsed: AuthSession = JSON.parse(stored);
           setSession(parsed);
-          setIsLoading(false);
-          return;
-        }
-
-        // Auto-provision demo concierge session for effortless MVP evaluation
-        try {
-          const demoSession = await loginUser("concierge@apex-fleet.com", "concierge123");
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(demoSession));
-          setSession(demoSession);
-        } catch {
-          // If offline or network issue, continue as unauthenticated
+        } else {
+          setSession(null);
         }
       } catch (err) {
         console.error("Failed to restore auth session:", err);
+        setSession(null);
       } finally {
         setIsLoading(false);
       }
