@@ -9,6 +9,7 @@ import { Navbar } from "@/components/navigation/Navbar";
 import { ThemePreviewBanner } from "@/components/themes/ThemePreviewBanner";
 import { FAQSection } from "@/components/storefront/FAQSection";
 import { PlatformLanding } from "@/components/platform/PlatformLanding";
+import PlatformSuperAdminPage from "@/app/(platform)/platform/page";
 import { getPublicFAQs } from "@/lib/api/dashboard";
 
 interface PageProps {
@@ -24,11 +25,16 @@ export default async function HomePage({ searchParams }: PageProps) {
     resolvedSearchParams.theme_preview || resolvedSearchParams.preview_theme;
   const previewThemeId = typeof rawPreview === "string" ? rawPreview : null;
 
-  // Resolve tenant configuration vs Platform Root
+  // Resolve tenant configuration vs Platform Root vs Super-Admin Host
   const resolution = await resolveTenant(host, previewThemeId);
 
-  // 1. If accessing the Root SaaS Platform Domain (localhost:3000 / platform.localhost)
-  // render the Platform Marketing Portal & Super-Admin Launchpad
+  // 1. If accessing Superuser Host (admin.localhost), render Super-Admin Portal directly
+  if (resolution.isAdmin) {
+    return <PlatformSuperAdminPage />;
+  }
+
+  // 2. If accessing Root SaaS Platform Domain (localhost:3000 / platform.localhost),
+  // render the Customer Portal Launchpad & Platform Website
   if (resolution.isPlatform) {
     return <PlatformLanding />;
   }

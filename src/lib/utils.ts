@@ -24,3 +24,30 @@ export function formatCurrency(
     minimumFractionDigits: 2,
   }).format(numericAmount || 0);
 }
+
+export const DEFAULT_VEHICLE_IMAGE =
+  "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=800&q=80";
+
+/**
+ * Validates and sanitizes image URLs for Next.js <Image /> components.
+ * Prevents "Failed to construct 'URL': Invalid URL" runtime exceptions.
+ */
+export function getSafeImageUrl(
+  url: unknown,
+  fallback: string = DEFAULT_VEHICLE_IMAGE
+): string {
+  if (typeof url !== "string") return fallback;
+  const trimmed = url.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith("/") || trimmed.startsWith("data:")) return trimmed;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return trimmed;
+    }
+  } catch {
+    return fallback;
+  }
+  return fallback;
+}
+

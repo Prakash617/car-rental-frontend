@@ -3,13 +3,15 @@
 import React from "react";
 import Image from "next/image";
 import { VehicleCardProps } from "@/lib/themes/types";
+import { getSafeImageUrl, DEFAULT_VEHICLE_IMAGE } from "@/lib/utils";
 
 export function MinimalVehicleCard({ vehicle, branding, onSelect }: VehicleCardProps) {
   const isAvailable = vehicle.status === "available";
-  const primaryImage =
+  const rawImage =
     vehicle.images && vehicle.images.length > 0
       ? vehicle.images[0].url
-      : "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80";
+      : DEFAULT_VEHICLE_IMAGE;
+  const primaryImage = getSafeImageUrl(rawImage, DEFAULT_VEHICLE_IMAGE);
 
   return (
     <div className="group border border-zinc-900 bg-zinc-950 flex flex-col justify-between transition-colors hover:border-zinc-700">

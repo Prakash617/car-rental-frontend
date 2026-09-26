@@ -4,13 +4,15 @@ import React from "react";
 import Image from "next/image";
 import { VehicleCardProps } from "@/lib/themes/types";
 import { Gauge, Fuel, Users, Shield } from "lucide-react";
+import { getSafeImageUrl, DEFAULT_VEHICLE_IMAGE } from "@/lib/utils";
 
 export function LuxuryVehicleCard({ vehicle, branding, onSelect }: VehicleCardProps) {
   const isAvailable = vehicle.status === "available";
-  const primaryImage =
+  const rawImage =
     vehicle.images && vehicle.images.length > 0
       ? vehicle.images[0].url
-      : "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=800&q=80";
+      : DEFAULT_VEHICLE_IMAGE;
+  const primaryImage = getSafeImageUrl(rawImage, DEFAULT_VEHICLE_IMAGE);
 
   return (
     <div className="group relative rounded-2xl bg-[#12141F] border border-white/[0.06] overflow-hidden transition-all duration-500 hover:border-[#D4AF37]/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col justify-between">

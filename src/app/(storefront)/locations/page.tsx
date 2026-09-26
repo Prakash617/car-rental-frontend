@@ -7,36 +7,14 @@ import {
   MapPin,
   Clock,
   Phone,
-  Mail,
-  Plane,
-  Building2,
   Sparkles,
-  ArrowRight,
-  ShieldCheck,
 } from "lucide-react";
-import { Navbar } from "@/components/navigation/Navbar";
-import { LuxuryFooter } from "@/themes/luxury/Footer";
-import { Button } from "@/components/ui/button";
-import { TenantBranding } from "@/types";
-
-const DEFAULT_BRANDING: TenantBranding = {
-  name: "Apex Luxury Concierge",
-  logo_url: "",
-  primary_color: "#D4AF37",
-  accent_color: "#F59E0B",
-  font_heading: "serif",
-  currency: "USD",
-  timezone: "America/Los_Angeles",
-  active_theme: "luxury",
-  hero_title: "Prestige Automotive Hire",
-  hero_subtitle: "Exclusive fleet access with private concierge delivery.",
-  support_phone: "+1 (800) 555-APEX",
-  support_email: "concierge@apex-fleet.com",
-};
+import { useBranding } from "@/lib/context/branding";
+import { getThemeHeadingFont } from "@/lib/themes/registry";
 
 const HUBS = [
   {
-    name: "Downtown Flagship Concierge Hub",
+    name: "Downtown Flagship Hub",
     type: "Metropolitan Executive Depot",
     address: "9400 Wilshire Blvd, Suite 1200, Beverly Hills, CA 90212",
     phone: "+1 (310) 555-0199",
@@ -80,33 +58,31 @@ const HUBS = [
 ];
 
 export default function LocationsPage() {
-  const branding = DEFAULT_BRANDING;
+  const branding = useBranding();
+  const headingFont = getThemeHeadingFont(branding.active_theme);
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-black text-slate-100 font-sans selection:bg-[#D4AF37]/30 selection:text-white"
-      style={
-        {
-          "--brand-primary": branding.primary_color,
-          "--brand-accent": branding.accent_color,
-        } as React.CSSProperties
-      }
-    >
-      <Navbar branding={branding} />
-
+    <>
       {/* Header */}
       <section className="relative pt-24 pb-16 px-4 sm:px-6 lg:px-8 border-b border-white/[0.08] bg-gradient-to-b from-zinc-950 to-black">
         <div className="max-w-4xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-xs font-mono uppercase">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono uppercase border"
+            style={{
+              backgroundColor: `${branding.primary_color}18`,
+              borderColor: `${branding.primary_color}33`,
+              color: branding.primary_color,
+            }}
+          >
             <MapPin className="w-3.5 h-3.5" />
-            <span>Depot Hubs & Aviation Terminals</span>
+            <span>Depot Hubs &amp; Aviation Terminals</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-serif font-bold text-white tracking-tight">
+          <h1 className={`text-4xl sm:text-5xl font-bold text-white tracking-tight ${headingFont}`}>
             Strategic Concierge Hubs
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
             From private aviation FBO tarmac gates to secure downtown climate-controlled depots,
-            our physical infrastructure guarantees white-glove arrival and flawless vehicle turnover.
+            {branding.name}&apos;s physical infrastructure guarantees white-glove arrival and flawless vehicle turnover.
           </p>
         </div>
       </section>
@@ -117,7 +93,7 @@ export default function LocationsPage() {
           {HUBS.map((hub, idx) => (
             <div
               key={idx}
-              className="rounded-2xl bg-zinc-950/70 border border-white/[0.08] overflow-hidden flex flex-col justify-between hover:border-[#D4AF37]/40 transition-colors shadow-xl"
+              className="rounded-2xl bg-zinc-950/70 border border-white/[0.08] overflow-hidden flex flex-col justify-between transition-colors shadow-xl group hover:border-white/[0.2]"
             >
               <div>
                 <div className="relative aspect-[16/10] w-full bg-zinc-900">
@@ -131,19 +107,19 @@ export default function LocationsPage() {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <h3 className="text-lg font-bold font-serif text-white">{hub.name}</h3>
+                  <h3 className={`text-lg font-bold text-white ${headingFont}`}>{hub.name}</h3>
 
                   <div className="space-y-2 text-xs text-zinc-400 font-light">
                     <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                      <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: branding.primary_color }} />
                       <span>{hub.address}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                      <Clock className="w-4 h-4 shrink-0" style={{ color: branding.primary_color }} />
                       <span>{hub.hours}</span>
                     </div>
                     <div className="flex items-center gap-2 font-mono">
-                      <Phone className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                      <Phone className="w-4 h-4 shrink-0" style={{ color: branding.primary_color }} />
                       <span>{hub.phone}</span>
                     </div>
                   </div>
@@ -155,7 +131,7 @@ export default function LocationsPage() {
                     <ul className="space-y-1 text-xs text-zinc-300">
                       {hub.features.map((feat, fidx) => (
                         <li key={fidx} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: branding.primary_color }} />
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -167,7 +143,16 @@ export default function LocationsPage() {
               <div className="p-6 pt-0">
                 <Link
                   href="/fleet"
-                  className="w-full py-2.5 rounded-xl bg-white/[0.04] hover:bg-[#D4AF37] hover:text-black border border-white/[0.1] text-xs font-semibold uppercase tracking-wider text-white text-center block transition-all"
+                  className="w-full py-2.5 rounded-xl border border-white/[0.1] text-xs font-semibold uppercase tracking-wider text-white text-center block transition-all hover:text-black"
+                  style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = branding.primary_color;
+                    (e.currentTarget as HTMLElement).style.color = "#000";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.04)";
+                    (e.currentTarget as HTMLElement).style.color = "#fff";
+                  }}
                 >
                   View Vehicles at This Hub
                 </Link>
@@ -176,8 +161,6 @@ export default function LocationsPage() {
           ))}
         </div>
       </section>
-
-      <LuxuryFooter branding={branding} />
-    </div>
+    </>
   );
 }

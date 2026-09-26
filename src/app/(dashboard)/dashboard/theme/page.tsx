@@ -14,7 +14,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getManageableWebsiteConfig, updateTenantThemeConfig } from "@/lib/api/dashboard";
@@ -175,6 +175,25 @@ const THEME_PRESET_CONFIG: Record<ThemeId, { primaryColor: string; accentColor: 
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            disabled={isSaving}
+            onClick={() => handleSave()}
+            className="bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-bold text-xs h-9 px-4 shadow-md shadow-amber-500/20"
+          >
+            {isSaving ? (
+              <>
+                <Sparkles className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-3.5 w-3.5 mr-1.5" />
+                Save Active Theme
+              </>
+            )}
+          </Button>
+
           <Link
             href={`/?theme_preview=${activeTheme}`}
             target="_blank"
@@ -203,58 +222,144 @@ const THEME_PRESET_CONFIG: Record<ThemeId, { primaryColor: string; accentColor: 
       <form onSubmit={handleSave} className="space-y-8">
         {/* 1. Theme Preset Selector */}
         <Card className="border-white/[0.08] bg-zinc-950/60 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span>Select Active Storefront Theme</span>
-            </CardTitle>
-            <CardDescription className="text-xs text-zinc-400">
-              Choose from 6 engineered automotive aesthetics tailored for luxury and mobility.
-            </CardDescription>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Select Active Storefront Theme</span>
+              </CardTitle>
+              <CardDescription className="text-xs text-zinc-400">
+                Choose from 6 engineered automotive aesthetics tailored for luxury and mobility.
+              </CardDescription>
+            </div>
+            <Button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleSave()}
+              className="bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-bold text-xs h-9 px-4 shadow-md shadow-amber-500/20 shrink-0"
+            >
+              {isSaving ? (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  Saving Theme...
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5 mr-1.5" />
+                  Save Active Theme
+                </>
+              )}
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {(Object.keys(THEME_DEFINITIONS) as ThemeId[]).map((id) => {
                 const def = THEME_DEFINITIONS[id];
                 const isSelected = activeTheme === id;
+                const isCurrentlyActive = persistedTheme === id;
 
                 return (
                   <div
                     key={id}
                     onClick={() => handleSelectThemePreset(id)}
-                    className={`relative cursor-pointer rounded-xl border p-4 transition-all ${
+                    className={`relative cursor-pointer rounded-xl border p-4 transition-all flex flex-col justify-between ${
                       isSelected
                         ? "border-primary bg-primary/[0.08] shadow-lg ring-1 ring-primary/40"
                         : "border-white/[0.08] bg-zinc-900/40 hover:border-white/[0.2] hover:bg-zinc-900/80"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-sm text-white">{def.name}</span>
-                      {isSelected && (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-black text-xs font-bold">
-                          ✓
-                        </span>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm text-white">{def.name}</span>
+                        {isCurrentlyActive ? (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold">
+                            <CheckCircle2 className="w-3 h-3" /> Live
+                          </span>
+                        ) : isSelected ? (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-black text-xs font-bold">
+                            ✓
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-xs text-zinc-400 leading-relaxed mb-3">
+                        {def.description}
+                      </p>
+                      {THEME_PRESET_CONFIG[id] && (
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 mb-4">
+                          <span
+                            className="inline-block h-3.5 w-3.5 rounded-full border border-white/20"
+                            style={{ backgroundColor: THEME_PRESET_CONFIG[id].primaryColor }}
+                          />
+                          <span>{THEME_PRESET_CONFIG[id].primaryColor}</span>
+                          <span className="text-zinc-600">•</span>
+                          <span className="capitalize">{THEME_PRESET_CONFIG[id].fontHeading}</span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-                      {def.description}
-                    </p>
-                    {THEME_PRESET_CONFIG[id] && (
-                      <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
-                        <span
-                          className="inline-block h-3.5 w-3.5 rounded-full border border-white/20"
-                          style={{ backgroundColor: THEME_PRESET_CONFIG[id].primaryColor }}
-                        />
-                        <span>{THEME_PRESET_CONFIG[id].primaryColor}</span>
-                        <span className="text-zinc-600">•</span>
-                        <span className="capitalize">{THEME_PRESET_CONFIG[id].fontHeading}</span>
-                      </div>
-                    )}
+
+                    <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between mt-auto">
+                      {isCurrentlyActive ? (
+                        <span className="text-[11px] font-medium text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Active on Storefront
+                        </span>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={isSaving}
+                          onClick={(e) => handleActivateTheme(id, e)}
+                          className={`text-xs h-7 px-3 font-semibold ${
+                            isSelected
+                              ? "bg-primary text-black hover:bg-primary/90"
+                              : "bg-white/10 hover:bg-white/20 text-white"
+                          }`}
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Set as Active Theme
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           </CardContent>
+          <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/[0.08] bg-white/[0.02] rounded-b-xl px-6 py-4">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-xs text-zinc-400">Selected Theme:</span>
+              <span className="text-xs font-bold text-white px-2.5 py-1 rounded-md bg-primary/20 border border-primary/40 text-primary">
+                {THEME_DEFINITIONS[activeTheme]?.name || activeTheme}
+              </span>
+              {persistedTheme === activeTheme ? (
+                <span className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Currently Active on Storefront
+                </span>
+              ) : (
+                <span className="text-xs text-amber-400 font-mono">
+                  (Click Save Theme to apply permanently)
+                </span>
+              )}
+            </div>
+
+            <Button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleSave()}
+              className="w-full sm:w-auto bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-bold text-xs h-10 px-5 shadow-lg shadow-amber-500/20"
+            >
+              {isSaving ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2 animate-spin" />
+                  Saving Theme...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save & Set Active Theme
+                </>
+              )}
+            </Button>
+          </CardFooter>
         </Card>
 
         {/* 2. Color Palette & Identity */}

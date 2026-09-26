@@ -26,7 +26,10 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { getVehicles, createVehicle, CreateVehiclePayload } from "@/lib/api/vehicles";
 import { fetchBranches, Branch } from "@/lib/api/branches";
 import { updateVehicleStatus } from "@/lib/api/dashboard";
+import { getSafeImageUrl } from "@/lib/utils";
 import { Vehicle, VehicleCategory, VehicleStatus } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query/keys";
 
 const IMAGE_PRESETS = [
   {
@@ -57,6 +60,7 @@ const IMAGE_PRESETS = [
 
 export default function FleetManagementPage() {
   const { token } = useAuth();
+  const queryClient = useQueryClient();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -139,6 +143,7 @@ export default function FleetManagementPage() {
       setVehicles((prev) =>
         prev.map((v) => (v.id === vehicleId ? { ...v, status: newStatus } : v))
       );
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all });
       toast.success("Vehicle status updated", {
         description: `Status changed to ${newStatus.toUpperCase()}`,
       });
@@ -171,6 +176,7 @@ export default function FleetManagementPage() {
       };
       const created = await createVehicle(payload, token || undefined);
       setVehicles((prev) => [created, ...prev]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all });
       toast.success(`Vehicle ${created.brand} ${created.model} added to fleet!`, {
         description: `License Plate: ${created.license_plate} · Daily Rate: $${created.daily_rate}/day`,
       });
@@ -338,10 +344,11 @@ export default function FleetManagementPage() {
               </TableRow>
             ) : (
               filteredVehicles.map((vehicle) => {
-                const img =
+                const rawUrl =
                   vehicle.images && vehicle.images.length > 0
                     ? vehicle.images[0].url
                     : IMAGE_PRESETS[1].url;
+                const img = getSafeImageUrl(rawUrl, IMAGE_PRESETS[1].url);
 
                 return (
                   <TableRow
@@ -356,6 +363,7 @@ export default function FleetManagementPage() {
                           alt={`${vehicle.brand} ${vehicle.model}`}
                           fill
                           sizes="80px"
+                          unoptimized
                           className="object-cover"
                         />
                       </div>

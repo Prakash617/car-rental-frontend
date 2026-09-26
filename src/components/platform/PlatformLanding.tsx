@@ -56,14 +56,13 @@ export function PlatformLanding() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/platform">
+            <Link href="/login?mode=create">
               <Button
-                variant="outline"
                 size="sm"
-                className="border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white text-xs font-semibold"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-purple-600/25 px-4 py-2"
               >
-                <Lock className="w-3.5 h-3.5 mr-1.5 text-purple-400" />
-                Platform Super-Admin
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                Get Started
               </Button>
             </Link>
           </div>
@@ -93,8 +92,21 @@ export function PlatformLanding() {
             bespoke storefront themes, fleet telemetry, and white-glove concierge management.
           </p>
 
+          {/* Hero CTAs */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <Link href="/login?mode=create">
+              <Button
+                size="lg"
+                className="px-8 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs tracking-wider uppercase shadow-xl shadow-purple-600/30"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Get Started
+              </Button>
+            </Link>
+          </div>
+
           {/* Quick Workspaces Dock */}
-          <div className="pt-6 max-w-3xl mx-auto">
+          <div id="workspaces" className="pt-6 max-w-3xl mx-auto">
             <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/[0.08] backdrop-blur-xl shadow-2xl">
               <p className="text-xs font-mono uppercase text-zinc-400 mb-3 tracking-wider">
                 Explore Live Environments Right Now:
@@ -120,49 +132,49 @@ export function PlatformLanding() {
                   </span>
                 </a>
 
-                {/* 2. Tenant Concierge OS */}
-                <a
-                  href="http://apex.localhost:3000/dashboard"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {/* 2. Operations Dashboard */}
+                <Link
+                  href="/dashboard"
                   className="group p-3.5 rounded-xl bg-black/40 border border-white/[0.06] hover:border-blue-500/40 hover:bg-blue-500/5 transition-all text-left flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between text-blue-400 mb-1.5">
-                      <span className="text-xs font-bold font-mono">apex.localhost/dashboard</span>
+                      <span className="text-xs font-bold font-mono">localhost:3000/dashboard</span>
                       <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
                     </div>
-                    <p className="text-xs font-semibold text-white">Tenant Concierge OS</p>
-                    <p className="text-[11px] text-zinc-400 mt-1">Bookings, Fleet, Telemetry & CMS</p>
+                    <p className="text-xs font-semibold text-white">Operations Dashboard</p>
+                    <p className="text-[11px] text-zinc-400 mt-1">Unified portal for all tenants & staff</p>
                   </div>
                   <span className="text-[10px] font-mono text-blue-400 mt-3 flex items-center gap-1">
                     Open Dashboard <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                   </span>
-                </a>
+                </Link>
 
                 {/* 3. Platform Super-Admin */}
-                <Link
-                  href="/platform"
+                <a
+                  href="http://admin.localhost:3000"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group p-3.5 rounded-xl bg-black/40 border border-purple-500/30 bg-purple-500/5 hover:border-purple-500/60 hover:bg-purple-500/10 transition-all text-left flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between text-purple-400 mb-1.5">
-                      <span className="text-xs font-bold font-mono">localhost:3000/platform</span>
-                      <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                      <span className="text-xs font-bold font-mono">admin.localhost:3000</span>
+                      <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
                     </div>
-                    <p className="text-xs font-semibold text-white">Platform Super-Admin</p>
-                    <p className="text-[11px] text-zinc-400 mt-1">Cross-tenant overview & provisioning</p>
+                    <p className="text-xs font-semibold text-white">Superuser Admin Portal</p>
+                    <p className="text-[11px] text-zinc-400 mt-1">Cross-tenant overview & master control</p>
                   </div>
                   <span className="text-[10px] font-mono text-purple-400 mt-3 flex items-center gap-1">
-                    Manage Platform <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    Open Superuser Console <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                   </span>
-                </Link>
+                </a>
               </div>
             </div>
           </div>
         </div>
       </section>
-
+      
       {/* Multi-Tenancy Architecture Breakdown */}
       <section id="architecture" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/[0.06] bg-black/40">
         <div className="max-w-6xl mx-auto space-y-12">
@@ -332,14 +344,12 @@ export function PlatformLanding() {
             >
               Demo Storefront (apex.localhost)
             </a>
-            <a
-              href="http://apex.localhost:3000/dashboard"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/dashboard"
               className="hover:text-blue-400 transition-colors"
             >
-              Concierge OS (apex.localhost/dashboard)
-            </a>
+              Operations Dashboard (localhost:3000/dashboard)
+            </Link>
           </div>
         </div>
       </footer>

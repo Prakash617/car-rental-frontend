@@ -58,11 +58,20 @@ export interface CustomPagePayload {
 /**
   * Authenticate staff or admin user for tenant management operations
   */
-export async function loginUser(email: string, password: string, tenantHost?: string): Promise<AuthSession> {
+export async function loginUser(
+  email: string,
+  password?: string,
+  tenantHost?: string,
+  otp?: string
+): Promise<AuthSession> {
+  const payload: Record<string, string> = { email: email.trim().toLowerCase() };
+  if (password) payload.password = password;
+  if (otp) payload.otp = otp;
+
   return apiFetch<AuthSession>("/auth/login/", {
     method: "POST",
     tenantHost,
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(payload),
   });
 }
 

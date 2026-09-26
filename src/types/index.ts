@@ -135,6 +135,8 @@ export interface AuthSession {
   role: "owner" | "admin" | "manager" | "staff" | "accountant" | "viewer";
   access_token: string;
   refresh_token: string;
+  tenant_domain?: string | null;
+  redirect_url?: string;
 }
 
 export interface ApiResponse<T> {

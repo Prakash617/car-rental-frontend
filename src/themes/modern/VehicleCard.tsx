@@ -4,13 +4,15 @@ import React from "react";
 import Image from "next/image";
 import { VehicleCardProps } from "@/lib/themes/types";
 import { Zap, Gauge, Users, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { getSafeImageUrl, DEFAULT_VEHICLE_IMAGE } from "@/lib/utils";
 
 export function ModernVehicleCard({ vehicle, branding, onSelect }: VehicleCardProps) {
   const isAvailable = vehicle.status === "available";
-  const primaryImage =
+  const rawImage =
     vehicle.images && vehicle.images.length > 0
       ? vehicle.images[0].url
-      : "https://images.unsplash.com/photo-1536700503339-1e4b06520771?auto=format&fit=crop&w=800&q=80";
+      : DEFAULT_VEHICLE_IMAGE;
+  const primaryImage = getSafeImageUrl(rawImage, DEFAULT_VEHICLE_IMAGE);
 
   const isElectric = vehicle.fuel_type === "electric";
 

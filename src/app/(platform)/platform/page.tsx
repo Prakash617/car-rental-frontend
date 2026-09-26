@@ -558,7 +558,7 @@ export default function PlatformSuperAdminPage() {
 
                           {/* Dashboard Link */}
                           <a
-                            href={`http://${t.primary_domain}:3000/dashboard`}
+                            href={`http://localhost:3000/dashboard?tenant=${t.primary_domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/[0.05] border border-white/[0.08] text-[11px] font-medium text-blue-400 hover:bg-white/[0.1] transition-colors"

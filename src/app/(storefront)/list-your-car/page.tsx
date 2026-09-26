@@ -24,27 +24,11 @@ import {
   Loader2,
   ChevronDown,
 } from "lucide-react";
-import { Navbar } from "@/components/navigation/Navbar";
-import { LuxuryFooter } from "@/themes/luxury/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
-import { TenantBranding } from "@/types";
-
-const DEFAULT_BRANDING: TenantBranding = {
-  name: "Apex Luxury Concierge",
-  logo_url: "",
-  primary_color: "#D4AF37",
-  accent_color: "#F59E0B",
-  font_heading: "serif",
-  currency: "USD",
-  timezone: "America/Los_Angeles",
-  active_theme: "luxury",
-  hero_title: "Prestige Automotive Hire",
-  hero_subtitle: "Exclusive fleet access with private concierge delivery.",
-  support_phone: "+1 (800) 555-APEX",
-  support_email: "concierge@apex-fleet.com",
-};
+import { useBranding } from "@/lib/context/branding";
+import { getThemeHeadingFont } from "@/lib/themes/registry";
 
 interface VehicleTier {
   id: string;
@@ -113,7 +97,8 @@ const FAQS = [
 ];
 
 export default function ListYourCarPage() {
-  const branding = DEFAULT_BRANDING;
+  const branding = useBranding();
+  const headingFont = getThemeHeadingFont(branding.active_theme);
 
   // Calculator State
   const [selectedTier, setSelectedTier] = useState<VehicleTier>(VEHICLE_TIERS[0]);
@@ -201,32 +186,23 @@ export default function ListYourCarPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-black text-slate-100 font-sans selection:bg-[#D4AF37]/30 selection:text-white"
-      style={
-        {
-          "--brand-primary": branding.primary_color,
-          "--brand-accent": branding.accent_color,
-        } as React.CSSProperties
-      }
-    >
-      <Navbar branding={branding} />
+    <>
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden border-b border-white/[0.08]">
         {/* Ambient Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.07] via-transparent to-black pointer-events-none" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-[#D4AF37]/10 blur-[130px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-[var(--brand-primary)]/10 blur-[130px] rounded-full pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-mono uppercase tracking-widest animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/30 text-[var(--brand-primary)] text-xs font-mono uppercase tracking-widest animate-fade-in">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Apex Vehicle Host & Consignment Program</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.15]">
+          <h1 className={`text-4xl sm:text-5xl lg:text-6xl ${headingFont} font-bold text-white tracking-tight leading-[1.15]`}>
             Turn Your Luxury Automobile Into <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-amber-200 to-amber-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--brand-primary)] via-amber-200 to-amber-500">
               High-Yield Passive Revenue
             </span>
           </h1>
@@ -241,7 +217,7 @@ export default function ListYourCarPage() {
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="#calculator"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-semibold text-xs tracking-wider uppercase shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[var(--brand-primary)] hover:opacity-90 text-black font-semibold text-xs tracking-wider uppercase shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
             >
               <DollarSign className="w-4 h-4" />
               Calculate Your Earnings
@@ -251,7 +227,7 @@ export default function ListYourCarPage() {
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.15] text-white font-semibold text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2"
             >
               Apply to List Vehicle
-              <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
+              <ArrowRight className="w-4 h-4 text-[var(--brand-primary)]" />
             </a>
           </div>
 
@@ -261,7 +237,7 @@ export default function ListYourCarPage() {
               <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 block mb-1">
                 Owner Revenue Share
               </span>
-              <span className="text-2xl sm:text-3xl font-bold font-serif text-[#D4AF37]">
+              <span className={`text-2xl sm:text-3xl font-bold ${headingFont} text-[var(--brand-primary)]`}>
                 70% Net
               </span>
               <span className="text-[11px] text-zinc-500 block mt-1">Direct monthly ACH payout</span>
@@ -271,7 +247,7 @@ export default function ListYourCarPage() {
               <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 block mb-1">
                 Insurance Policy
               </span>
-              <span className="text-2xl sm:text-3xl font-bold font-serif text-white">
+              <span className={`text-2xl sm:text-3xl font-bold ${headingFont} text-white`}>
                 $2,000,000
               </span>
               <span className="text-[11px] text-zinc-500 block mt-1">Comprehensive & collision</span>
@@ -281,7 +257,7 @@ export default function ListYourCarPage() {
               <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 block mb-1">
                 Avg. Host Earning
               </span>
-              <span className="text-2xl sm:text-3xl font-bold font-serif text-emerald-400">
+              <span className={`text-2xl sm:text-3xl font-bold ${headingFont} text-emerald-400`}>
                 $5,200/mo
               </span>
               <span className="text-[11px] text-zinc-500 block mt-1">Based on 8-12 rental days</span>
@@ -291,7 +267,7 @@ export default function ListYourCarPage() {
               <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 block mb-1">
                 Driver Vetting
               </span>
-              <span className="text-2xl sm:text-3xl font-bold font-serif text-white">
+              <span className={`text-2xl sm:text-3xl font-bold ${headingFont} text-white`}>
                 Top 1% VIP
               </span>
               <span className="text-[11px] text-zinc-500 block mt-1">28+ age limit & $3k+ deposit</span>
@@ -307,7 +283,7 @@ export default function ListYourCarPage() {
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Interactive Payout Forecaster</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
+          <h2 className={`text-3xl sm:text-4xl ${headingFont} font-bold text-white tracking-tight`}>
             Estimate Your Monthly Host Revenue
           </h2>
           <p className="text-sm text-zinc-400 max-w-xl mx-auto font-light">
@@ -334,13 +310,13 @@ export default function ListYourCarPage() {
                       onClick={() => handleSelectTier(tier)}
                       className={`text-left p-3.5 rounded-xl border transition-all relative overflow-hidden flex flex-col justify-between ${
                         isSelected
-                          ? "bg-zinc-900 border-[#D4AF37] ring-1 ring-[#D4AF37]"
+                          ? "bg-zinc-900 border-[var(--brand-primary)] ring-1 ring-[var(--brand-primary)]"
                           : "bg-zinc-950/60 border-white/[0.08] hover:border-white/20 hover:bg-zinc-900/60"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold text-sm text-white">{tier.name}</span>
-                        <span className="text-xs font-mono text-[#D4AF37]">
+                        <span className="text-xs font-mono text-[var(--brand-primary)]">
                           ${tier.defaultDailyRate}/day
                         </span>
                       </div>
@@ -363,7 +339,7 @@ export default function ListYourCarPage() {
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-bold font-mono text-[#D4AF37]">
+                  <span className="text-2xl font-bold font-mono text-[var(--brand-primary)]">
                     {daysPerMonth}
                   </span>
                   <span className="text-xs text-zinc-400 block">days / month</span>
@@ -376,7 +352,7 @@ export default function ListYourCarPage() {
                 max="24"
                 value={daysPerMonth}
                 onChange={(e) => setDaysPerMonth(parseInt(e.target.value))}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--brand-primary)]"
               />
 
               <div className="flex justify-between text-[11px] font-mono text-zinc-500">
@@ -415,13 +391,13 @@ export default function ListYourCarPage() {
 
           {/* Results Summary Card */}
           <div className="lg:col-span-5">
-            <div className="relative rounded-2xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-[#D4AF37]/30 p-6 sm:p-8 space-y-6 shadow-2xl shadow-amber-500/10">
+            <div className="relative rounded-2xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-[var(--brand-primary)]/30 p-6 sm:p-8 space-y-6 shadow-2xl shadow-amber-500/10">
               <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
                 <div>
                   <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">
                     Estimated Annual Payout
                   </span>
-                  <div className="text-3xl sm:text-4xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mt-0.5">
+                  <div className={`text-3xl sm:text-4xl ${headingFont} font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mt-0.5`}>
                     ${hostAnnualEstimate.toLocaleString()}
                   </div>
                 </div>
@@ -448,7 +424,7 @@ export default function ListYourCarPage() {
                   <span className="text-zinc-400">Apex Concierge Fee (30%):</span>
                   <span className="text-zinc-500">-${apexFeeMonthly.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between py-2 text-sm font-bold bg-[#D4AF37]/10 p-3 rounded-xl border border-[#D4AF37]/20 text-[#D4AF37]">
+                <div className="flex justify-between py-2 text-sm font-bold bg-[var(--brand-primary)]/10 p-3 rounded-xl border border-[var(--brand-primary)]/20 text-[var(--brand-primary)]">
                   <span>Your Net Monthly Payout:</span>
                   <span>${hostNetMonthly.toLocaleString()}</span>
                 </div>
@@ -468,7 +444,7 @@ export default function ListYourCarPage() {
 
               <a
                 href="#application"
-                className="w-full block text-center py-3.5 rounded-xl bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-semibold text-xs tracking-wider uppercase transition-all shadow-lg"
+                className="w-full block text-center py-3.5 rounded-xl bg-[var(--brand-primary)] hover:opacity-90 text-black font-semibold text-xs tracking-wider uppercase transition-all shadow-lg"
               >
                 Apply to Consign This Vehicle
               </a>
@@ -481,10 +457,10 @@ export default function ListYourCarPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-zinc-950/70 border-y border-white/[0.08]">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#D4AF37]">
+            <span className="text-xs font-mono uppercase tracking-widest text-[var(--brand-primary)]">
               Total Peace of Mind
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
+            <h2 className={`text-3xl sm:text-4xl ${headingFont} font-bold text-white tracking-tight`}>
               Enterprise Protection For Your Automotive Asset
             </h2>
             <p className="text-sm text-zinc-400 max-w-2xl mx-auto font-light">
@@ -495,10 +471,10 @@ export default function ListYourCarPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.08] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-primary)]">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">
+              <h3 className={`text-base font-bold text-white ${headingFont}`}>
                 $2M Commercial Coverage
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-light">
@@ -509,10 +485,10 @@ export default function ListYourCarPage() {
             </div>
 
             <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.08] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-primary)]">
                 <UserCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">
+              <h3 className={`text-base font-bold text-white ${headingFont}`}>
                 Strict VIP Renter Screening
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-light">
@@ -522,10 +498,10 @@ export default function ListYourCarPage() {
             </div>
 
             <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.08] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-primary)]">
                 <Gauge className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">
+              <h3 className={`text-base font-bold text-white ${headingFont}`}>
                 24/7 Telemetry & Geo-Fencing
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-light">
@@ -535,10 +511,10 @@ export default function ListYourCarPage() {
             </div>
 
             <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.08] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-primary)]">
                 <Building2 className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">
+              <h3 className={`text-base font-bold text-white ${headingFont}`}>
                 Climate-Controlled Depots
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-light">
@@ -548,10 +524,10 @@ export default function ListYourCarPage() {
             </div>
 
             <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.08] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-primary)]">
                 <Sparkles className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">
+              <h3 className={`text-base font-bold text-white ${headingFont}`}>
                 Complimentary Concierge Detailing
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-light">
@@ -561,10 +537,10 @@ export default function ListYourCarPage() {
             </div>
 
             <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.08] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-primary)]">
                 <Calendar className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">
+              <h3 className={`text-base font-bold text-white ${headingFont}`}>
                 Unlimited Owner Personal Use
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-light">
@@ -585,7 +561,7 @@ export default function ListYourCarPage() {
                 <Lock className="w-3 h-3" />
                 <span>Existing Host Partner Access</span>
               </div>
-              <h3 className="text-xl font-bold font-serif text-white mt-1">
+              <h3 className={`text-xl font-bold ${headingFont} text-white mt-1`}>
                 Apex Host Operations Portal
               </h3>
               <p className="text-xs text-zinc-400">
@@ -598,7 +574,7 @@ export default function ListYourCarPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowDemoPortal(!showDemoPortal)}
-                className="text-xs border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                className="text-xs border-[var(--brand-primary)]/30 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10"
               >
                 {showDemoPortal ? "Hide Host Dashboard" : "Demo Live Host Dashboard"}
               </Button>
@@ -670,7 +646,7 @@ export default function ListYourCarPage() {
                   <span className="text-[11px] text-zinc-400 font-mono uppercase">
                     Upcoming Charters
                   </span>
-                  <div className="text-xl font-bold font-mono text-[#D4AF37] mt-0.5">
+                  <div className="text-xl font-bold font-mono text-[var(--brand-primary)] mt-0.5">
                     2 Scheduled
                   </div>
                   <span className="text-[10px] text-zinc-500 font-mono">Oct 4-6, Oct 11-13</span>
@@ -704,7 +680,7 @@ export default function ListYourCarPage() {
                           "Vehicle marked unavailable to public guests for your personal driving dates.",
                       })
                     }
-                    className="bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-semibold text-xs"
+                    className="bg-[var(--brand-primary)] hover:opacity-90 text-black font-semibold text-xs"
                   >
                     Schedule Personal Drive
                   </Button>
@@ -718,11 +694,11 @@ export default function ListYourCarPage() {
       {/* Host Onboarding Application Form */}
       <section id="application" className="py-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
         <div className="text-center space-y-3 mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-xs font-mono uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 text-[var(--brand-primary)] text-xs font-mono uppercase">
             <FileCheck className="w-3.5 h-3.5" />
             <span>Consignment Application</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
+          <h2 className={`text-3xl sm:text-4xl ${headingFont} font-bold text-white tracking-tight`}>
             Apply to List Your Vehicle
           </h2>
           <p className="text-sm text-zinc-400 max-w-lg mx-auto font-light">
@@ -738,7 +714,7 @@ export default function ListYourCarPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold font-serif text-white">
+              <h3 className={`text-2xl font-bold ${headingFont} text-white`}>
                 Application Received Successfully!
               </h3>
               <p className="text-sm text-zinc-400 max-w-md mx-auto">
@@ -753,7 +729,7 @@ export default function ListYourCarPage() {
 
             <div className="inline-block p-4 rounded-xl bg-black border border-white/[0.08] text-left font-mono text-xs space-y-1">
               <span className="text-zinc-500 block">Your Consignment Reference:</span>
-              <span className="text-lg font-bold text-[#D4AF37] block">
+              <span className="text-lg font-bold text-[var(--brand-primary)] block">
                 {submittedApp.reference}
               </span>
               <span className="text-[11px] text-zinc-400 block pt-1">
@@ -778,7 +754,7 @@ export default function ListYourCarPage() {
           >
             {/* Section 1: Owner Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37] font-mono border-b border-white/[0.08] pb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] font-mono border-b border-white/[0.08] pb-2">
                 1. Owner & Contact Information
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -839,7 +815,7 @@ export default function ListYourCarPage() {
 
             {/* Section 2: Vehicle Profile */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37] font-mono border-b border-white/[0.08] pb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] font-mono border-b border-white/[0.08] pb-2">
                 2. Vehicle Specifications
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -924,7 +900,7 @@ export default function ListYourCarPage() {
 
             {/* Section 3: Photo Preview */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37] font-mono border-b border-white/[0.08] pb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] font-mono border-b border-white/[0.08] pb-2">
                 3. Display Photograph
               </h3>
               <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -970,7 +946,7 @@ export default function ListYourCarPage() {
                   required
                   checked={formData.hasCleanTitle}
                   onChange={(e) => setFormData({ ...formData, hasCleanTitle: e.target.checked })}
-                  className="mt-0.5 rounded border-white/20 bg-black/60 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  className="mt-0.5 rounded border-white/20 bg-black/60 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
                 />
                 <span className="text-xs text-zinc-300 leading-relaxed">
                   I certify that this vehicle possesses a clean title with no salvage, flood, or
@@ -982,7 +958,7 @@ export default function ListYourCarPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-12 bg-[#D4AF37] hover:bg-[#e2bd46] text-black font-semibold text-xs tracking-wider uppercase transition-all shadow-xl shadow-amber-500/20"
+              className="w-full h-12 bg-[var(--brand-primary)] hover:opacity-90 text-black font-semibold text-xs tracking-wider uppercase transition-all shadow-xl shadow-amber-500/20"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
@@ -1004,10 +980,10 @@ export default function ListYourCarPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full border-t border-white/[0.08]">
         <div className="text-center space-y-3 mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-zinc-300 text-xs font-mono uppercase">
-            <HelpCircle className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <HelpCircle className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
             <span>Host Transparency & Guidance</span>
           </div>
-          <h2 className="text-3xl font-serif font-bold text-white tracking-tight">
+          <h2 className={`text-3xl ${headingFont} font-bold text-white tracking-tight`}>
             Frequently Asked Questions by Vehicle Owners
           </h2>
         </div>
@@ -1027,8 +1003,6 @@ export default function ListYourCarPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <LuxuryFooter branding={branding} />
-    </div>
+    </>
   );
 }

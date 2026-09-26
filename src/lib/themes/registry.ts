@@ -89,3 +89,14 @@ export function getThemeDefinition(themeId?: string): ThemeDefinition {
   }
   return THEME_DEFINITIONS.luxury;
 }
+
+export function getThemeHeadingFont(activeTheme?: string): string {
+  if (activeTheme === "luxury" || activeTheme === "classic") {
+    return "font-serif";
+  }
+  if (activeTheme === "adventure") {
+    return "font-mono";
+  }
+  return "font-sans font-bold";
+}
+

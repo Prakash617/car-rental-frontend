@@ -20,6 +20,7 @@ export const API_BASE_URL =
 export interface RequestOptions extends RequestInit {
   tenantHost?: string;
   token?: string;
+  _retry?: boolean;
 }
 
 function formatErrorMessage(rawMessage?: string, details?: unknown): string {
@@ -51,29 +52,50 @@ function formatErrorMessage(rawMessage?: string, details?: unknown): string {
 
 /**
  * Enterprise API client that attaches tenant hostname routing headers,
- * auto-resolves authentication tokens, and unwraps standardized response envelopes.
+ * auto-resolves authentication tokens, intercepts 401 expired tokens with
+ * silent refresh, and unwraps standardized response envelopes.
  */
 export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { tenantHost, token, headers: customHeaders, ...restOptions } = options;
+  const { tenantHost, token, headers: customHeaders, _retry, ...restOptions } = options;
 
-  const resolvedHost =
-    tenantHost ||
-    (typeof window !== "undefined" ? window.location.host : "localhost:3000");
-
-  let authToken = token;
-  if (!authToken && typeof window !== "undefined") {
+  let storedSession: { access_token?: string; tenant_domain?: string } | null = null;
+  if (typeof window !== "undefined") {
     try {
       const stored = localStorage.getItem("apex_saas_auth_session");
       if (stored) {
-        const session = JSON.parse(stored);
-        if (session?.access_token) {
-          authToken = session.access_token;
-        }
+        storedSession = JSON.parse(stored);
       }
     } catch {
       // Ignore localStorage read errors
     }
   }
+
+  let authToken = token || storedSession?.access_token;
+
+  let effectiveHost = tenantHost;
+  if (!effectiveHost && typeof window !== "undefined") {
+    const currentHost = window.location.host;
+    const cleanHost = currentHost.split(":")[0].toLowerCase();
+
+    // If accessing on localhost:3000 or platform root, route to the user's tenant domain
+    if (cleanHost === "localhost" || cleanHost === "127.0.0.1" || cleanHost === "platform.localhost") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tenantParam = urlParams.get("tenant");
+      if (tenantParam) {
+        const baseParam = tenantParam.replace(/:\d+$/, "");
+        effectiveHost = `${baseParam}:3000`;
+      } else if (storedSession?.tenant_domain) {
+        const baseDomain = storedSession.tenant_domain.replace(/:\d+$/, "");
+        effectiveHost = `${baseDomain}:3000`;
+      } else {
+        effectiveHost = "apex.localhost:3000";
+      }
+    } else {
+      effectiveHost = currentHost;
+    }
+  }
+
+  const resolvedHost = effectiveHost || "apex.localhost:3000";
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -100,6 +122,22 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
       ...restOptions,
       headers,
     });
+
+    // Check for 401 Unauthorized (token expired)
+    const isAuthRoute = path.includes("/auth/login") || path.includes("/auth/refresh");
+    if (response.status === 401 && !_retry && !isAuthRoute && typeof window !== "undefined") {
+      const { refreshAccessToken } = await import("@/lib/auth/tokenManager");
+      const newAccessToken = await refreshAccessToken(resolvedHost);
+
+      if (newAccessToken) {
+        // Token refreshed successfully — retry the original request with new token
+        return apiFetch<T>(endpoint, {
+          ...options,
+          token: newAccessToken,
+          _retry: true,
+        });
+      }
+    }
 
     let json: ApiResponse<T>;
     try {

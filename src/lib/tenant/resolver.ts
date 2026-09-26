@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/api/client";
 
 export interface TenantResolution {
   isPlatform: boolean;
+  isAdmin: boolean;
   subdomain: string | null;
   branding: TenantBranding;
   isPreview: boolean;
@@ -29,8 +30,19 @@ const DEFAULT_BRANDING: TenantBranding = {
 };
 
 /**
- * Checks if a hostname belongs to the root SaaS Platform itself
- * (e.g. localhost:3000, 127.0.0.1:3000, platform.localhost)
+ * Checks if a hostname belongs to the Super-Admin Platform Portal (admin.localhost)
+ */
+export function isSuperAdminHost(hostname: string): boolean {
+  const clean = hostname.split(":")[0].toLowerCase();
+  return (
+    clean === "admin.localhost" ||
+    clean === "admin.platform.localhost" ||
+    clean === "admin.platform.local"
+  );
+}
+
+/**
+ * Checks if a hostname belongs to the root customer portal (localhost:3000, platform.localhost)
  */
 export function isPlatformRoot(hostname: string): boolean {
   const clean = hostname.split(":")[0].toLowerCase();
@@ -38,7 +50,6 @@ export function isPlatformRoot(hostname: string): boolean {
     clean === "localhost" ||
     clean === "127.0.0.1" ||
     clean === "platform.localhost" ||
-    clean === "admin.localhost" ||
     clean === "platform.local"
   );
 }
@@ -66,7 +77,8 @@ export async function resolveTenant(
   previewParam?: string | null
 ): Promise<TenantResolution> {
   const hostname = hostnameHeader || "localhost:3000";
-  const isPlatform = isPlatformRoot(hostname);
+  const isAdmin = isSuperAdminHost(hostname);
+  const isPlatform = isPlatformRoot(hostname) || isAdmin;
   const subdomain = extractTenantSubdomain(hostname);
 
   // Check if live preview mode is triggered via ephemeral query param
@@ -112,6 +124,7 @@ export async function resolveTenant(
 
   return {
     isPlatform,
+    isAdmin,
     subdomain,
     branding,
     isPreview,

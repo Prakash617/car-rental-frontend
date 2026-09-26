@@ -73,9 +73,6 @@ export async function provisionTenant(
   });
 }
 
-/**
- * Update tenant status (suspend, reactivate, update details)
- */
 export async function updatePlatformTenant(
   id: string,
   payload: Partial<PlatformTenant>,
@@ -84,6 +81,39 @@ export async function updatePlatformTenant(
   return apiFetch<PlatformTenant>(`/platform/tenants/${id}/`, {
     method: "PATCH",
     token,
+    tenantHost: "localhost",
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface RegisterTenantPayload {
+  company_name: string;
+  subdomain: string;
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone_number?: string;
+  currency?: string;
+  timezone?: string;
+}
+
+export interface RegisterTenantResult {
+  tenant_id: string;
+  company_name: string;
+  schema_name: string;
+  domain: string;
+  owner_email: string;
+}
+
+/**
+ * Self-service registration endpoint for customers creating their new car rental portal
+ */
+export async function registerTenant(
+  payload: RegisterTenantPayload
+): Promise<RegisterTenantResult> {
+  return apiFetch<RegisterTenantResult>("/auth/register/", {
+    method: "POST",
     tenantHost: "localhost",
     body: JSON.stringify(payload),
   });

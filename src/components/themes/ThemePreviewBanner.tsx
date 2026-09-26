@@ -44,23 +44,26 @@ export function ThemePreviewBanner({ currentThemeId, isPreview }: ThemePreviewBa
   const currentMeta = THEME_REGISTRY[currentThemeId] || THEME_REGISTRY.luxury;
 
   const handleSelectTheme = (newThemeId: string) => {
+    document.cookie = `tenant_theme_preview=${newThemeId}; path=/; max-age=86400; SameSite=Lax`;
     const params = new URLSearchParams(searchParams.toString());
     params.set("theme_preview", newThemeId);
     router.push(`?${params.toString()}`);
   };
 
   const handleExitPreview = () => {
+    document.cookie = "tenant_theme_preview=; path=/; max-age=0;";
     const params = new URLSearchParams(searchParams.toString());
     params.delete("theme_preview");
     params.delete("preview_theme");
     const query = params.toString();
-    router.push(query ? `?${query}` : "/");
+    router.push(query ? `?${query}` : window.location.pathname);
   };
 
   const handleApplyToTenant = async () => {
     setIsApplying(true);
     try {
       await updateTenantThemeConfig({ active_theme: currentThemeId });
+      document.cookie = "tenant_theme_preview=; path=/; max-age=0;";
       setAppliedNotification(true);
       setTimeout(() => {
         setAppliedNotification(false);

@@ -4,10 +4,28 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, ExternalLink, ShieldCheck, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useBranding } from "@/lib/context/branding";
 
 export function Topbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, tenantDomain } = useAuth();
+
+  let brandingName = "FLEETCORE";
+  try {
+    const branding = useBranding();
+    if (branding?.name) {
+      brandingName = branding.name;
+    }
+  } catch {
+    if (tenantDomain) {
+      const clean = tenantDomain.split(".")[0];
+      brandingName = clean.toUpperCase() + " FLEET";
+    }
+  }
+
+  const rawDomain = tenantDomain || (typeof window !== "undefined" && window.location.host.includes(".localhost") ? window.location.host : "apex.localhost");
+  const cleanDomain = rawDomain.replace(/:\d+$/, "");
+  const storefrontUrl = `http://${cleanDomain}:3000`;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/[0.08] bg-zinc-950/80 px-4 backdrop-blur-xl md:px-8">
@@ -19,27 +37,28 @@ export function Topbar() {
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-        <span className="font-bold text-white text-sm">APEX CONCIERGE</span>
+        <span className="font-bold text-white text-sm truncate max-w-[180px]">{brandingName}</span>
       </div>
 
       {/* Tenancy Badge (Desktop) */}
       <div className="hidden items-center gap-3 md:flex">
-        <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400 font-medium">
+        <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400 font-medium font-mono">
           <ShieldCheck className="h-3.5 w-3.5" />
-          <span>PostgreSQL Schema-Isolated Tenant</span>
+          <span>{tenantDomain ? `${tenantDomain}` : "PostgreSQL Schema-Isolated Tenant"}</span>
         </div>
       </div>
 
       {/* Topbar Actions */}
       <div className="flex items-center gap-3">
-        <Link
-          href="/"
+        <a
+          href={storefrontUrl}
           target="_blank"
+          rel="noopener noreferrer"
           className="hidden sm:inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors border border-white/[0.08] rounded-md px-2.5 py-1.5 bg-white/[0.03]"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           <span>Open Storefront</span>
-        </Link>
+        </a>
 
         <div className="h-4 w-px bg-white/[0.08] hidden sm:block" />
 
@@ -106,14 +125,15 @@ export function Topbar() {
             Theme & Branding
           </Link>
           <div className="pt-2 border-t border-white/[0.08] flex justify-between items-center">
-            <Link
-              href="/"
+            <a
+              href={`http://${(tenantDomain || "apex.localhost").replace(/:\d+$/, "")}:3000`}
               target="_blank"
+              rel="noopener noreferrer"
               className="text-xs text-primary flex items-center gap-1"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               View Storefront
-            </Link>
+            </a>
             <button
               onClick={() => {
                 logout();
